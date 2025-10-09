@@ -1,0 +1,165 @@
+<Window x:Class="AquaParkManager.Windows.SlidesManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Slides Management" Height="600" Width="1200" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#FF2E86AB" Padding="15">
+            <StackPanel>
+                <TextBlock Text="🎢 Slides Management" 
+                          FontSize="20" 
+                          FontWeight="Bold" 
+                          Foreground="White"/>
+                <TextBlock Text="Manage water slides and their specifications" 
+                          FontSize="12" 
+                          Foreground="White" 
+                          Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Slides List -->
+            <GroupBox Grid.Column="0" Header="Water Slides" FontWeight="Bold">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Search and Add Button -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBox x:Name="txtSearch" 
+                                Width="200" 
+                                Height="30" 
+                                VerticalContentAlignment="Center"
+                                TextChanged="TxtSearch_TextChanged"
+                                Tag="Search slides..."/>
+                        <Button x:Name="btnAddSlide" 
+                               Content="➕ Add Slide" 
+                               Margin="10,0,0,0" 
+                               Padding="15,5"
+                               Background="#FF28A745"
+                               Foreground="White"
+                               BorderThickness="0"
+                               Click="BtnAddSlide_Click"/>
+                    </StackPanel>
+                    
+                    <!-- Slides DataGrid -->
+                    <DataGrid x:Name="dgSlides" 
+                             Grid.Row="1" 
+                             AutoGenerateColumns="False" 
+                             CanUserAddRows="False"
+                             SelectionChanged="DgSlides_SelectionChanged">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding SlideId}" Width="50" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding SlideType.Name}" Width="100"/>
+                            <DataGridTextColumn Header="Length (m)" Binding="{Binding LengthM, StringFormat=F2}" Width="80"/>
+                            <DataGridTextColumn Header="Height (m)" Binding="{Binding HeightM, StringFormat=F2}" Width="80"/>
+                            <DataGridTextColumn Header="Min Height (cm)" Binding="{Binding MinHeightCm}" Width="100"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
+                            <DataGridTextColumn Header="Pool" Binding="{Binding Pool.Name}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </GroupBox>
+            
+            <!-- Details Panel -->
+            <GroupBox Grid.Column="2" Header="Slide Details" FontWeight="Bold">
+                <ScrollViewer>
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Slide Name:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtName" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Slide Type:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="cmbSlideType" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Length (m):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtLength" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Height (m):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtHeight" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Min Height (cm):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtMinHeight" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Max Weight (kg):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtMaxWeight" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Status:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="cmbStatus" Margin="0,0,0,10">
+                            <ComboBoxItem Content="OPEN" IsSelected="True"/>
+                            <ComboBoxItem Content="CLOSED"/>
+                            <ComboBoxItem Content="MAINTENANCE"/>
+                            <ComboBoxItem Content="TEMP_CLOSED"/>
+                        </ComboBox>
+                        
+                        <TextBlock Text="Pool:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="cmbPool" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Installation Date:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <DatePicker x:Name="dpInstallationDate" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Notes:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtNotes" 
+                                Height="60" 
+                                TextWrapping="Wrap" 
+                                AcceptsReturn="True" 
+                                VerticalScrollBarVisibility="Auto"
+                                Margin="0,0,0,15"/>
+                        
+                        <!-- Action Buttons -->
+                        <Button x:Name="btnSave" 
+                               Content="💾 Save" 
+                               Background="#FF007BFF" 
+                               Foreground="White" 
+                               BorderThickness="0"
+                               Padding="10,5"
+                               Margin="0,0,0,5"
+                               Click="BtnSave_Click"/>
+                        
+                        <Button x:Name="btnDelete" 
+                               Content="🗑️ Delete" 
+                               Background="#FFDC3545" 
+                               Foreground="White" 
+                               BorderThickness="0"
+                               Padding="10,5"
+                               Margin="0,0,0,5"
+                               Click="BtnDelete_Click"/>
+                        
+                        <Button x:Name="btnClear" 
+                               Content="🔄 Clear" 
+                               Background="#FF6C757D" 
+                               Foreground="White" 
+                               BorderThickness="0"
+                               Padding="10,5"
+                               Click="BtnClear_Click"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+        </Grid>
+        
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="2" Background="#FFF8F9FA">
+            <StatusBarItem>
+                <TextBlock x:Name="lblStatus" Text="Ready"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
