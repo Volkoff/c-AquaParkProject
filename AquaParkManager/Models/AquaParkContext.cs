@@ -28,8 +28,8 @@ namespace AquaParkManager.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseOracle("User Id=st1234;Password=Heslo;Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=fei-sql3.upceucebny.cz)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=BDAS)))");
 
+            optionsBuilder.UseOracle("User Id=st72504;Password=HESLO;Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=fei-sql3.upceucebny.cz)(PORT=1521))(CONNECT_DATA=(SID=BDAS)))");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
