@@ -7,7 +7,6 @@ namespace AquaParkManager.Models
 {
     public class AquaParkContext : DbContext
     {
-        // HLAVNÍ TABULKY
         public DbSet<User> Users { get; set; }
         public DbSet<Staff> Staff { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -23,14 +22,12 @@ namespace AquaParkManager.Models
         public DbSet<PriceList> PriceLists { get; set; }
         public DbSet<SlideType> SlideTypes { get; set; }
 
-        // KOMPATIBILITA
         public DbSet<Pool> Pools { get; set; }
         public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
         public DbSet<Payment> Payments { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // UPRAV SI CONNECTION STRING
             optionsBuilder.UseOracle("User Id=st1234;Password=Heslo;Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=fei-sql3.upceucebny.cz)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=BDAS)))");
 
         }
