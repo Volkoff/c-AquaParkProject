@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,428 +7,275 @@ namespace AquaParkManager.Models
 {
     public class AquaParkContext : DbContext
     {
+        // HLAVNÍ TABULKY
+        public DbSet<User> Users { get; set; }
         public DbSet<Staff> Staff { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<StaffRole> StaffRoles { get; set; }
-        public DbSet<Certification> Certifications { get; set; }
-        public DbSet<Pool> Pools { get; set; }
-        public DbSet<SlideType> SlideTypes { get; set; }
-        public DbSet<Slide> Slides { get; set; }
-        public DbSet<Attraction> Attractions { get; set; }
-        public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
-        public DbSet<Schedule> Schedules { get; set; }
-        public DbSet<PriceList> PriceLists { get; set; }
-        public DbSet<TicketType> TicketTypes { get; set; }
         public DbSet<Visitor> Visitors { get; set; }
-        public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<BookingItem> BookingItems { get; set; }
-        public DbSet<Membership> Memberships { get; set; }
-        public DbSet<Shift> Shifts { get; set; }
-        public DbSet<StaffShift> StaffShifts { get; set; }
+        public DbSet<Attraction> Attractions { get; set; }
+        public DbSet<Media> Media { get; set; }
+        public DbSet<Address> Address { get; set; }
+        public DbSet<PostalCode> PostalCodes { get; set; }
+        public DbSet<TicketType> TicketTypes { get; set; }
+        public DbSet<PriceList> PriceLists { get; set; }
+        public DbSet<SlideType> SlideTypes { get; set; }
+
+        // KOMPATIBILITA
+        public DbSet<Pool> Pools { get; set; }
+        public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
         public DbSet<Payment> Payments { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Update this connection string to match your database
-            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=AquaParkDB;Trusted_Connection=true;MultipleActiveResultSets=true");
+            // UPRAV SI CONNECTION STRING
+            optionsBuilder.UseOracle("User Id=st1234;Password=Heslo;Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=fei-sql3.upceucebny.cz)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=BDAS)))");
+
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure decimal precision
-            modelBuilder.Entity<Pool>().Property(p => p.DepthMin).HasPrecision(5, 2);
-            modelBuilder.Entity<Pool>().Property(p => p.DepthMax).HasPrecision(5, 2);
-            modelBuilder.Entity<Slide>().Property(s => s.LengthM).HasPrecision(6, 2);
-            modelBuilder.Entity<Slide>().Property(s => s.HeightM).HasPrecision(6, 2);
-            modelBuilder.Entity<MaintenanceRecord>().Property(m => m.Cost).HasPrecision(12, 2);
-            modelBuilder.Entity<PriceList>().Property(p => p.BasePrice).HasPrecision(12, 2);
-            modelBuilder.Entity<TicketType>().Property(t => t.DurationHours).HasPrecision(5, 2);
-            modelBuilder.Entity<Ticket>().Property(t => t.PricePaid).HasPrecision(12, 2);
-            modelBuilder.Entity<Booking>().Property(b => b.TotalAmount).HasPrecision(12, 2);
-            modelBuilder.Entity<BookingItem>().Property(b => b.UnitPrice).HasPrecision(12, 2);
-            modelBuilder.Entity<Payment>().Property(p => p.Amount).HasPrecision(12, 2);
+            modelBuilder.Entity<User>().ToTable("USERS");
+            modelBuilder.Entity<Staff>().ToTable("STAFF");
+            modelBuilder.Entity<Role>().ToTable("ROLES");
+            modelBuilder.Entity<StaffRole>().ToTable("STAFF_ROLES");
+            modelBuilder.Entity<Visitor>().ToTable("VISITORS");
+            modelBuilder.Entity<Booking>().ToTable("BOOKINGS");
+            modelBuilder.Entity<BookingItem>().ToTable("BOOKING_ITEMS");
+            modelBuilder.Entity<Attraction>().ToTable("ATTRACTIONS");
+            modelBuilder.Entity<Media>().ToTable("MEDIA");
+            modelBuilder.Entity<Address>().ToTable("ADDRESS");
+            modelBuilder.Entity<PostalCode>().ToTable("POSTAL_CODES");
+            modelBuilder.Entity<TicketType>().ToTable("TICKET_TYPES");
+            modelBuilder.Entity<PriceList>().ToTable("PRICE_LIST");
+            modelBuilder.Entity<SlideType>().ToTable("SLIDE_TYPES");
 
-            // Configure indexes
-            modelBuilder.Entity<Attraction>().HasIndex(a => a.AttractionType);
-            modelBuilder.Entity<Schedule>().HasIndex(s => new { s.AttractionId, s.StartDatetime, s.EndDatetime });
-            modelBuilder.Entity<Ticket>().HasIndex(t => t.Status);
+            modelBuilder.Entity<Pool>().ToTable("PARK_AREAS");
+            modelBuilder.Entity<MaintenanceRecord>().ToTable("OPERATIONAL_LOGS");
+            modelBuilder.Entity<Payment>().ToTable("PAYMENTS");
         }
     }
 
+    // --- ENTITY ---
+
+    [Table("USERS")]
+    public class User
+    {
+        [Key][Column("USER_ID")] public int UserId { get; set; }
+        [Column("USERNAME")] public string Username { get; set; } = string.Empty;
+        [Column("PASSWORD_HASH")] public string PasswordHash { get; set; } = string.Empty;
+        [Column("EMAIL")] public string Email { get; set; } = string.Empty;
+        [Column("IS_ACTIVE")] public string IsActive { get; set; } = "Y";
+
+        [Column("STAFF_STAFF_ID")] public int? StaffId { get; set; }
+        [Column("VISITORS_VISITOR_ID")] public int? VisitorId { get; set; }
+    }
+
+    [Table("STAFF")]
     public class Staff
     {
-        [Key]
-        public int StaffId { get; set; }
-        [Required]
-        [MaxLength(100)]
-        public string FirstName { get; set; } = string.Empty;
-        [Required]
-        [MaxLength(100)]
-        public string LastName { get; set; } = string.Empty;
-        [MaxLength(200)]
-        public string? Email { get; set; }
-        [MaxLength(30)]
-        public string? Phone { get; set; }
-        public DateTime HireDate { get; set; } = DateTime.Now;
-        [MaxLength(1)]
-        public string Active { get; set; } = "Y";
-        [MaxLength(100)]
-        public string? JobTitle { get; set; }
-        public string? Notes { get; set; }
+        [Key][Column("STAFF_ID")] public int StaffId { get; set; }
+        [Column("FIRST_NAME")] public string FirstName { get; set; } = string.Empty;
+        [Column("LAST_NAME")] public string LastName { get; set; } = string.Empty;
+        [Column("EMAIL")] public string? Email { get; set; }
+        [Column("PHONE")] public string? Phone { get; set; }
+        [Column("JOB_TITLE")] public string? JobTitle { get; set; }
 
-        public virtual ICollection<StaffRole> StaffRoles { get; set; } = new List<StaffRole>();
-        public virtual ICollection<Certification> Certifications { get; set; } = new List<Certification>();
-        public virtual ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
-        public virtual ICollection<StaffShift> StaffShifts { get; set; } = new List<StaffShift>();
+        // OPRAVA: Vráceny chybìjící sloupce HIRE_DATE a NOTES
+        [Column("HIRE_DATE")] public DateTime HireDate { get; set; } = DateTime.Now;
+        [Column("NOTES")] public string? Notes { get; set; }
+
+        [Column("ACTIVE")] public string Active { get; set; } = "Y";
+        [Column("ADDRESS_ADDRESS_ID")] public int AddressId { get; set; }
+
+        [NotMapped] public string FullName => $"{FirstName} {LastName}";
     }
 
+    [Table("ROLES")]
     public class Role
     {
-        [Key]
-        public int RoleId { get; set; }
-        [Required]
-        [MaxLength(100)]
-        public string RoleName { get; set; } = string.Empty;
-        [MaxLength(4000)]
-        public string? Description { get; set; }
-
-        public virtual ICollection<StaffRole> StaffRoles { get; set; } = new List<StaffRole>();
+        [Key][Column("ROLE_ID")] public int RoleId { get; set; }
+        [Column("ROLE_NAME")] public string RoleName { get; set; } = string.Empty;
     }
 
+    [Table("STAFF_ROLES")]
     public class StaffRole
     {
-        [Key]
-        public int StaffRoleId { get; set; }
-        public int StaffId { get; set; }
-        public int RoleId { get; set; }
-        public DateTime AssignedDate { get; set; } = DateTime.Now;
-
-        [ForeignKey("StaffId")]
-        public virtual Staff Staff { get; set; } = null!;
-        [ForeignKey("RoleId")]
-        public virtual Role Role { get; set; } = null!;
+        [Key][Column("STAFF_ROLE_ID")] public int StaffRoleId { get; set; }
+        [Column("STAFF_STAFF_ID")] public int StaffId { get; set; }
+        [Column("ROLES_ROLE_ID")] public int RoleId { get; set; }
     }
 
-    public class Certification
-    {
-        [Key]
-        public int CertId { get; set; }
-        public int StaffId { get; set; }
-        [Required]
-        [MaxLength(200)]
-        public string CertName { get; set; } = string.Empty;
-        [MaxLength(200)]
-        public string? IssuedBy { get; set; }
-        public DateTime? IssuedDate { get; set; }
-        public DateTime? ExpiryDate { get; set; }
-        [MaxLength(2000)]
-        public string? Notes { get; set; }
-
-        [ForeignKey("StaffId")]
-        public virtual Staff Staff { get; set; } = null!;
-    }
-
-    public class Pool
-    {
-        [Key]
-        public int PoolId { get; set; }
-        [Required]
-        [MaxLength(150)]
-        public string Name { get; set; } = string.Empty;
-        [Required]
-        public decimal DepthMin { get; set; }
-        [Required]
-        public decimal DepthMax { get; set; }
-        [Required]
-        public int Capacity { get; set; }
-        [MaxLength(1)]
-        public string Indoors { get; set; } = "N";
-        [MaxLength(2000)]
-        public string? Notes { get; set; }
-
-        public virtual ICollection<Slide> Slides { get; set; } = new List<Slide>();
-    }
-
-    public class SlideType
-    {
-        [Key]
-        public int SlideTypeId { get; set; }
-        [Required]
-        [MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
-        [MaxLength(20)]
-        public string? Difficulty { get; set; }
-        [MaxLength(2000)]
-        public string? Description { get; set; }
-
-        public virtual ICollection<Slide> Slides { get; set; } = new List<Slide>();
-    }
-
-    public class Slide
-    {
-        [Key]
-        public int SlideId { get; set; }
-        [Required]
-        [MaxLength(200)]
-        public string Name { get; set; } = string.Empty;
-        public int SlideTypeId { get; set; }
-        public decimal? LengthM { get; set; }
-        public decimal? HeightM { get; set; }
-        public int? MinHeightCm { get; set; }
-        public int? MaxWeightKg { get; set; }
-        [MaxLength(20)]
-        public string Status { get; set; } = "OPEN";
-        public int? PoolId { get; set; }
-        public DateTime? InstallationDate { get; set; }
-        [MaxLength(2000)]
-        public string? Notes { get; set; }
-
-        [ForeignKey("SlideTypeId")]
-        public virtual SlideType SlideType { get; set; } = null!;
-        [ForeignKey("PoolId")]
-        public virtual Pool? Pool { get; set; }
-    }
-
-    public class Attraction
-    {
-        [Key]
-        public int AttractionId { get; set; }
-        [Required]
-        [MaxLength(200)]
-        public string Name { get; set; } = string.Empty;
-        [Required]
-        [MaxLength(50)]
-        public string AttractionType { get; set; } = string.Empty;
-        public int? ObjectId { get; set; }
-        [MaxLength(20)]
-        public string Status { get; set; } = "OPEN";
-        public int? Capacity { get; set; }
-        [MaxLength(2000)]
-        public string? Notes { get; set; }
-
-        public virtual ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
-        public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
-        public virtual ICollection<BookingItem> BookingItems { get; set; } = new List<BookingItem>();
-    }
-
-    public class MaintenanceRecord
-    {
-        [Key]
-        public int MaintenanceId { get; set; }
-        public int AttractionId { get; set; }
-        public int? ReportedBy { get; set; }
-        public DateTime ReportDate { get; set; } = DateTime.Now;
-        [MaxLength(4000)]
-        public string? ProblemDescription { get; set; }
-        [MaxLength(4000)]
-        public string? ActionTaken { get; set; }
-        public DateTime? CompletedDate { get; set; }
-        public decimal Cost { get; set; } = 0;
-
-        [ForeignKey("AttractionId")]
-        public virtual Attraction Attraction { get; set; } = null!;
-        [ForeignKey("ReportedBy")]
-        public virtual Staff? Staff { get; set; }
-    }
-
-    public class Schedule
-    {
-        [Key]
-        public int ScheduleId { get; set; }
-        public int AttractionId { get; set; }
-        public DateTime StartDatetime { get; set; }
-        public DateTime EndDatetime { get; set; }
-        [MaxLength(20)]
-        public string Status { get; set; } = "OPEN";
-        [MaxLength(2000)]
-        public string? Notes { get; set; }
-
-        [ForeignKey("AttractionId")]
-        public virtual Attraction Attraction { get; set; } = null!;
-    }
-
-    public class PriceList
-    {
-        [Key]
-        public int PriceId { get; set; }
-        [Required]
-        [MaxLength(200)]
-        public string Name { get; set; } = string.Empty;
-        [MaxLength(2000)]
-        public string? Description { get; set; }
-        [MaxLength(10)]
-        public string Currency { get; set; } = "EUR";
-        [Required]
-        public decimal BasePrice { get; set; }
-        public DateTime ValidFrom { get; set; } = DateTime.Now;
-        public DateTime? ValidTo { get; set; }
-        [MaxLength(1)]
-        public string Active { get; set; } = "Y";
-
-        public virtual ICollection<TicketType> TicketTypes { get; set; } = new List<TicketType>();
-    }
-
-    public class TicketType
-    {
-        [Key]
-        public int TicketTypeId { get; set; }
-        [Required]
-        [MaxLength(200)]
-        public string Name { get; set; } = string.Empty;
-        [MaxLength(2000)]
-        public string? Description { get; set; }
-        public int PriceId { get; set; }
-        public decimal? DurationHours { get; set; }
-        public int? AgeMin { get; set; }
-        public int? AgeMax { get; set; }
-
-        [ForeignKey("PriceId")]
-        public virtual PriceList PriceList { get; set; } = null!;
-        public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
-    }
-
+    [Table("VISITORS")]
     public class Visitor
     {
-        [Key]
-        public int VisitorId { get; set; }
-        [MaxLength(120)]
-        public string? FirstName { get; set; }
-        [MaxLength(120)]
-        public string? LastName { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        [MaxLength(200)]
-        public string? Email { get; set; }
-        [MaxLength(30)]
-        public string? Phone { get; set; }
-        [MaxLength(200)]
-        public string? EmergencyContact { get; set; }
-        [MaxLength(2000)]
-        public string? Notes { get; set; }
+        [Key][Column("VISITOR_ID")] public int VisitorId { get; set; }
+        [Column("FIRST_NAME")] public string? FirstName { get; set; }
+        [Column("LAST_NAME")] public string? LastName { get; set; }
+        [Column("DATE_OF_BIRTH")] public DateTime? DateOfBirth { get; set; }
+        [Column("EMAIL")] public string? Email { get; set; }
+        [Column("PHONE")] public string? Phone { get; set; }
+        [Column("NOTES")] public string? Notes { get; set; }
+        [Column("ADDRESS_ADDRESS_ID")] public int AddressId { get; set; }
 
-        public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
-        public virtual ICollection<Membership> Memberships { get; set; } = new List<Membership>();
+        [NotMapped] public string FullName => $"{FirstName} {LastName}";
+        [NotMapped] public string? EmergencyContact { get; set; }
     }
 
-    public class Ticket
-    {
-        [Key]
-        public int TicketId { get; set; }
-        public int TicketTypeId { get; set; }
-        public int? VisitorId { get; set; }
-        public DateTime PurchaseDate { get; set; } = DateTime.Now;
-        public DateTime? ValidFrom { get; set; }
-        public DateTime? ValidTo { get; set; }
-        [Required]
-        public decimal PricePaid { get; set; }
-        [MaxLength(20)]
-        public string Status { get; set; } = "ACTIVE";
-
-        [ForeignKey("TicketTypeId")]
-        public virtual TicketType TicketType { get; set; } = null!;
-        [ForeignKey("VisitorId")]
-        public virtual Visitor? Visitor { get; set; }
-        public virtual ICollection<BookingItem> BookingItems { get; set; } = new List<BookingItem>();
-    }
-
+    [Table("BOOKINGS")]
     public class Booking
     {
-        [Key]
-        public int BookingId { get; set; }
-        [MaxLength(30)]
-        public string? BookingRef { get; set; }
-        [MaxLength(200)]
-        public string? CustomerName { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public decimal TotalAmount { get; set; } = 0;
-        [MaxLength(20)]
-        public string Status { get; set; } = "CONFIRMED";
-        [MaxLength(2000)]
-        public string? Notes { get; set; }
-
-        public virtual ICollection<BookingItem> BookingItems { get; set; } = new List<BookingItem>();
-        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        [Key][Column("BOOKING_ID")] public int BookingId { get; set; }
+        [Column("BOOKING_REF")] public string? BookingRef { get; set; }
+        [Column("CREATED_DATE")] public DateTime CreatedDate { get; set; } = DateTime.Now;
+        [Column("TOTAL_AMOUNT")] public decimal TotalAmount { get; set; } = 0;
+        [Column("STATUS")] public string Status { get; set; } = "CONFIRMED";
+        [Column("NOTES")] public string? Notes { get; set; }
+        [Column("VISITORS_VISITOR_ID")] public int VisitorId { get; set; }
+        [NotMapped] public string? CustomerName { get; set; }
     }
 
+    [Table("BOOKING_ITEMS")]
     public class BookingItem
     {
-        [Key]
-        public int BookingItemId { get; set; }
-        public int BookingId { get; set; }
-        public int? AttractionId { get; set; }
-        public int? TicketId { get; set; }
-        public int Quantity { get; set; } = 1;
-        public decimal UnitPrice { get; set; } = 0;
+        [Key][Column("BOOKING_ITEM_ID")] public int BookingItemId { get; set; }
+        [Column("BOOKINGS_BOOKING_ID")] public int BookingId { get; set; }
+        [Column("QUANTITY")] public int Quantity { get; set; } = 1;
+        [Column("UNIT_PRICE")] public decimal UnitPrice { get; set; } = 0;
+        [Column("TICKET_TYPES_TICKET_TYPE_ID")] public int TicketTypeId { get; set; }
+        [ForeignKey("TicketTypeId")] public virtual TicketType? TicketType { get; set; }
 
-        [ForeignKey("BookingId")]
-        public virtual Booking Booking { get; set; } = null!;
-        [ForeignKey("AttractionId")]
-        public virtual Attraction? Attraction { get; set; }
-        [ForeignKey("TicketId")]
-        public virtual Ticket? Ticket { get; set; }
+        [NotMapped] public int? TicketId { get { return BookingItemId; } set { BookingItemId = value ?? 0; } }
+        [NotMapped] public virtual Visitor? Visitor { get; set; }
+        [NotMapped] public DateTime PurchaseDate { get; set; } = DateTime.Now;
+        [NotMapped] public decimal PricePaid { get { return UnitPrice; } set { UnitPrice = value; } }
+        [NotMapped] public string Status { get; set; } = "ACTIVE";
     }
 
-    public class Membership
+    [Table("ATTRACTIONS")]
+    public class Attraction
     {
-        [Key]
-        public int MembershipId { get; set; }
-        public int VisitorId { get; set; }
-        [MaxLength(100)]
-        public string? MembershipType { get; set; }
-        public DateTime StartDate { get; set; } = DateTime.Now;
-        public DateTime? EndDate { get; set; }
-        [MaxLength(1)]
-        public string Recurring { get; set; } = "N";
-        [MaxLength(20)]
-        public string Status { get; set; } = "ACTIVE";
+        [Key][Column("ATTRACTION_ID")] public int AttractionId { get; set; }
+        [Column("NAME")] public string Name { get; set; } = string.Empty;
+        [Column("STATUS")] public string Status { get; set; } = "OPEN";
+        [Column("SLIDE_TYPES_SLIDE_TYPE_ID")] public int? SlideTypeId { get; set; }
+        [ForeignKey("SlideTypeId")] public virtual SlideType? SlideType { get; set; }
+        [Column("PARK_AREAS_AREA_ID")] public int AreaId { get; set; }
+        [ForeignKey("AreaId")] public virtual Pool? Pool { get; set; }
 
-        [ForeignKey("VisitorId")]
-        public virtual Visitor Visitor { get; set; } = null!;
+        [NotMapped] public int? ObjectId { get; set; }
+        [NotMapped] public int? Capacity { get; set; }
+        [NotMapped] public string? Notes { get; set; }
+        [NotMapped] public string AttractionType { get; set; } = "Generic";
+
+        [NotMapped] public decimal? LengthM { get; set; }
+        [NotMapped] public decimal? HeightM { get; set; }
+        [NotMapped] public int? MinHeightCm { get; set; }
+        [NotMapped] public int? MaxWeightKg { get; set; }
+        [NotMapped] public DateTime? InstallationDate { get; set; }
     }
 
-    public class Shift
+    [Table("MEDIA")]
+    public class Media
     {
-        [Key]
-        public int ShiftId { get; set; }
-        [MaxLength(100)]
-        public string? ShiftName { get; set; }
-        public DateTime? StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
-        [MaxLength(2000)]
-        public string? Notes { get; set; }
-
-        public virtual ICollection<StaffShift> StaffShifts { get; set; } = new List<StaffShift>();
+        [Key][Column("MEDIA_ID")] public int MediaId { get; set; }
+        [Column("FILE_NAME")] public string? FileName { get; set; }
+        [Column("MEDIA_DATA")] public byte[]? MediaData { get; set; }
+        [Column("MIME_TYPE")] public string? MimeType { get; set; }
+        [Column("RELATED_TABLE")] public string RelatedTable { get; set; } = "ATTRACTIONS";
+        [Column("RELATED_ID")] public int RelatedId { get; set; }
     }
 
-    public class StaffShift
+    [Table("ADDRESS")]
+    public class Address
     {
-        [Key]
-        public int StaffShiftId { get; set; }
-        public int StaffId { get; set; }
-        public int ShiftId { get; set; }
-        public DateTime ShiftDate { get; set; }
-        public DateTime AssignedAt { get; set; } = DateTime.Now;
-
-        [ForeignKey("StaffId")]
-        public virtual Staff Staff { get; set; } = null!;
-        [ForeignKey("ShiftId")]
-        public virtual Shift Shift { get; set; } = null!;
+        [Key][Column("ADDRESS_ID")] public int AddressId { get; set; }
+        [Column("STREET")] public string? Street { get; set; }
+        [Column("HOUSE_NUMBER")] public string HouseNumber { get; set; } = string.Empty;
+        [Column("POSTAL_CODES_POSTAL_CODE_ID")] public int PostalCodeId { get; set; }
+        [NotMapped] public string City { get; set; } = string.Empty;
     }
 
+    [Table("POSTAL_CODES")]
+    public class PostalCode
+    {
+        [Key][Column("POSTAL_CODE_ID")] public int PostalCodeId { get; set; }
+        [Column("CITY")] public string City { get; set; } = string.Empty;
+        [Column("POSTAL_CODE")] public string Code { get; set; } = string.Empty;
+    }
+
+    [Table("TICKET_TYPES")]
+    public class TicketType
+    {
+        [Key][Column("TICKET_TYPE_ID")] public int TicketTypeId { get; set; }
+        [Column("NAME")] public string Name { get; set; } = string.Empty;
+        [Column("DESCRIPTION")] public string? Description { get; set; }
+        [Column("AGE_FROM")] public int? AgeMin { get; set; }
+        [Column("AGE_TO")] public int? AgeMax { get; set; }
+        [NotMapped] public int PriceId { get; set; }
+    }
+
+    [Table("PRICE_LIST")]
+    public class PriceList
+    {
+        [Key][Column("PRICE_ID")] public int PriceId { get; set; }
+        [Column("NAME")] public string Name { get; set; } = string.Empty;
+        [Column("BASE_PRICE")] public decimal BasePrice { get; set; }
+        [Column("DESCRIPTION")] public string? Description { get; set; }
+        [Column("VALID_FROM")] public DateTime ValidFrom { get; set; } = DateTime.Now;
+    }
+
+    [Table("SLIDE_TYPES")]
+    public class SlideType
+    {
+        [Key][Column("SLIDE_TYPE_ID")] public int SlideTypeId { get; set; }
+        [Column("NAME")] public string Name { get; set; } = string.Empty;
+        [Column("DESCRIPTION")] public string? Description { get; set; }
+        [Column("DIFFICULTY")] public string? Difficulty { get; set; }
+    }
+
+    [Table("PARK_AREAS")]
+    public class Pool
+    {
+        [Key][Column("AREA_ID")] public int PoolId { get; set; }
+        [Column("NAME")] public string Name { get; set; } = string.Empty;
+        [Column("CAPACITY")] public int Capacity { get; set; }
+        [Column("INDOORS")] public string Indoors { get; set; } = "N";
+        [NotMapped] public decimal DepthMin { get; set; }
+        [NotMapped] public decimal DepthMax { get; set; }
+        [NotMapped] public string? Notes { get; set; }
+    }
+
+    [Table("OPERATIONAL_LOGS")]
+    public class MaintenanceRecord
+    {
+        [Key][Column("LOG_ID")] public int MaintenanceId { get; set; }
+        [Column("LOG_TIMESTAMP")] public DateTime ReportDate { get; set; } = DateTime.Now;
+        [Column("DESCRIPTION")] public string? ProblemDescription { get; set; }
+        [Column("LOG_TYPE")] public string LogType { get; set; } = "MAINTENANCE";
+
+        [Column("RELATED_TABLE")] public string? RelatedTable { get; set; }
+        [Column("RELATED_ID")] public int? RelatedId { get; set; }
+        [Column("STAFF_STAFF_ID")] public int? ReportedBy { get; set; }
+
+        [ForeignKey("ReportedBy")] public virtual Staff? Staff { get; set; }
+
+        [NotMapped] public int AttractionId { get; set; }
+        [NotMapped] public virtual Attraction? Attraction { get; set; }
+        [NotMapped] public string? ActionTaken { get; set; }
+        [NotMapped] public DateTime? CompletedDate { get; set; }
+        [NotMapped] public decimal Cost { get; set; }
+    }
+
+    [Table("PAYMENTS")]
     public class Payment
     {
-        [Key]
-        public int PaymentId { get; set; }
-        public int? BookingId { get; set; }
-        public DateTime PaymentDate { get; set; } = DateTime.Now;
-        [Required]
-        public decimal Amount { get; set; }
-        [MaxLength(50)]
-        public string? PaymentMethod { get; set; }
-        [MaxLength(200)]
-        public string? Reference { get; set; }
-
-        [ForeignKey("BookingId")]
-        public virtual Booking? Booking { get; set; }
+        [Key][Column("PAYMENT_ID")] public int PaymentId { get; set; }
+        [Column("AMOUNT")] public decimal Amount { get; set; }
+        [Column("PAYMENT_METHOD")] public string? PaymentMethod { get; set; }
+        [NotMapped] public int? BookingId { get; set; }
+        [NotMapped] public virtual Booking? Booking { get; set; }
     }
 }

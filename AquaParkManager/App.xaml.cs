@@ -1,27 +1,21 @@
-﻿using System.Configuration;
-using System.Data;
+﻿using AquaParkManager.Models;
+using AquaParkManager.Windows;
 using System.Windows;
 
 namespace AquaParkManager
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
+        // Globální proměnná pro přihlášeného uživatele
+        public static User? CurrentUser { get; set; }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            
-            // Initialize database with sample data
-            try
-            {
-                DatabaseInitializer.Initialize();
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show($"Error initializing database: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+
+            // Startujeme Login oknem
+            LoginWindow login = new LoginWindow();
+            login.Show();
         }
     }
 }

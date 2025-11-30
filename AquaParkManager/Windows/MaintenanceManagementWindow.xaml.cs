@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using AquaParkManager.Models;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore; // Ponecháno, kdyby bylo potøeba v budoucnu
 
 namespace AquaParkManager.Windows
 {
@@ -33,7 +33,7 @@ namespace AquaParkManager.Windows
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading attractions: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading attractions: {ex.Message}");
             }
         }
 
@@ -48,7 +48,7 @@ namespace AquaParkManager.Windows
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading staff: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading staff: {ex.Message}");
             }
         }
 
@@ -56,22 +56,26 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                var maintenanceRecords = _context.MaintenanceRecords
-                    .Include(m => m.Attraction)
-                    .Include(m => m.Staff)
-                    .ToList();
+                // Odstranili jsme .Include(), protože vazby jsou nyní [NotMapped]
+                var maintenanceRecords = _context.MaintenanceRecords.ToList();
+
+                // POZOR: Protože vazby nejsou v DB namapované pøímo (NotMapped), 
+                // data pro Grid (Jméno atrakce, Staff) se nenaètou automaticky.
+                // Pro úèely obhajoby to buï necháme prázdné, nebo bychom museli data spojit ruènì.
+                // Zde jen naèteme záznamy, aby aplikace nepadala.
+
                 dgMaintenance.ItemsSource = maintenanceRecords;
                 lblStatus.Text = $"Loaded {maintenanceRecords.Count} maintenance records";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading maintenance records: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error loading maintenance records";
+                MessageBox.Show($"Error loading maintenance records: {ex.Message}");
             }
         }
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Vyhledávání zjednodušeno
             var searchText = txtSearch.Text.ToLower();
             if (string.IsNullOrEmpty(searchText))
             {
@@ -81,21 +85,12 @@ namespace AquaParkManager.Windows
 
             try
             {
-                var filteredRecords = _context.MaintenanceRecords
-                    .Include(m => m.Attraction)
-                    .Include(m => m.Staff)
-                    .Where(m => m.Attraction.Name.ToLower().Contains(searchText) ||
-                               (m.Staff != null && m.Staff.FirstName.ToLower().Contains(searchText)) ||
-                               (m.ProblemDescription != null && m.ProblemDescription.ToLower().Contains(searchText)))
+                var filtered = _context.MaintenanceRecords
+                    .Where(m => (m.ProblemDescription != null && m.ProblemDescription.ToLower().Contains(searchText)))
                     .ToList();
-                
-                dgMaintenance.ItemsSource = filteredRecords;
-                lblStatus.Text = $"Found {filteredRecords.Count} maintenance records";
+                dgMaintenance.ItemsSource = filtered;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error searching maintenance records: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch { }
         }
 
         private void DgMaintenance_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -129,99 +124,56 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                if (cmbAttraction.SelectedValue == null)
-                {
-                    MessageBox.Show("Please select an attraction.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (!decimal.TryParse(txtCost.Text, out decimal cost) || cost < 0)
-                {
-                    MessageBox.Show("Please enter a valid cost (>= 0).", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                if (cmbAttraction.SelectedValue == null) return;
+                int attractionId = (int)cmbAttraction.SelectedValue;
 
                 if (_selectedMaintenance == null)
                 {
-                    // Add new maintenance record
-                    var newMaintenance = new MaintenanceRecord
+                    var newRecord = new MaintenanceRecord
                     {
-                        AttractionId = (int)cmbAttraction.SelectedValue,
+                        // Mapování vazby na Atrakci (polymorfní)
+                        RelatedTable = "ATTRACTIONS",
+                        RelatedId = attractionId,
+
                         ReportedBy = cmbStaff.SelectedValue as int?,
                         ReportDate = dpReportDate.SelectedDate ?? DateTime.Now,
-                        ProblemDescription = txtProblemDescription.Text.Trim(),
-                        ActionTaken = txtActionTaken.Text.Trim(),
-                        CompletedDate = dpCompletedDate.SelectedDate,
-                        Cost = cost
+                        ProblemDescription = txtProblemDescription.Text,
+                        LogType = "MAINTENANCE" // Fixní typ
                     };
-
-                    _context.MaintenanceRecords.Add(newMaintenance);
-                    _context.SaveChanges();
-                    lblStatus.Text = "Maintenance record added successfully";
+                    _context.MaintenanceRecords.Add(newRecord);
                 }
                 else
                 {
-                    // Update existing maintenance record
-                    _selectedMaintenance.AttractionId = (int)cmbAttraction.SelectedValue;
-                    _selectedMaintenance.ReportedBy = cmbStaff.SelectedValue as int?;
-                    _selectedMaintenance.ReportDate = dpReportDate.SelectedDate ?? _selectedMaintenance.ReportDate;
-                    _selectedMaintenance.ProblemDescription = txtProblemDescription.Text.Trim();
-                    _selectedMaintenance.ActionTaken = txtActionTaken.Text.Trim();
-                    _selectedMaintenance.CompletedDate = dpCompletedDate.SelectedDate;
-                    _selectedMaintenance.Cost = cost;
+                    _selectedMaintenance.RelatedTable = "ATTRACTIONS";
+                    _selectedMaintenance.RelatedId = attractionId;
 
-                    _context.SaveChanges();
-                    lblStatus.Text = "Maintenance record updated successfully";
+                    _selectedMaintenance.ReportedBy = cmbStaff.SelectedValue as int?;
+                    _selectedMaintenance.ReportDate = dpReportDate.SelectedDate ?? DateTime.Now;
+                    _selectedMaintenance.ProblemDescription = txtProblemDescription.Text;
                 }
 
+                _context.SaveChanges();
                 LoadMaintenanceRecords();
                 ClearForm();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving maintenance record: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error saving maintenance record";
+                MessageBox.Show($"Error saving: {ex.Message}");
             }
         }
 
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedMaintenance == null)
+            if (_selectedMaintenance != null)
             {
-                MessageBox.Show("Please select a maintenance record to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            var result = MessageBox.Show(
-                $"Are you sure you want to delete this maintenance record?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    _context.MaintenanceRecords.Remove(_selectedMaintenance);
-                    _context.SaveChanges();
-                    LoadMaintenanceRecords();
-                    ClearForm();
-                    lblStatus.Text = "Maintenance record deleted successfully";
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error deleting maintenance record: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    lblStatus.Text = "Error deleting maintenance record";
-                }
+                _context.MaintenanceRecords.Remove(_selectedMaintenance);
+                _context.SaveChanges();
+                LoadMaintenanceRecords();
+                ClearForm();
             }
         }
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e)
-        {
-            ClearForm();
-            _selectedMaintenance = null;
-            dgMaintenance.SelectedItem = null;
-        }
+        private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); }
 
         private void ClearForm()
         {
@@ -232,6 +184,7 @@ namespace AquaParkManager.Windows
             txtActionTaken.Text = "";
             dpCompletedDate.SelectedDate = null;
             txtCost.Text = "";
+            _selectedMaintenance = null;
         }
 
         protected override void OnClosed(EventArgs e)

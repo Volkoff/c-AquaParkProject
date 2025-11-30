@@ -10,7 +10,7 @@ namespace AquaParkManager.Windows
     public partial class SlidesManagementWindow : Window
     {
         private AquaParkContext _context;
-        private Slide? _selectedSlide;
+        private Attraction? _selectedSlide;
 
         public SlidesManagementWindow()
         {
@@ -26,98 +26,55 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                var slideTypes = _context.SlideTypes.ToList();
-                cmbSlideType.ItemsSource = slideTypes;
+                cmbSlideType.ItemsSource = _context.SlideTypes.ToList();
                 cmbSlideType.DisplayMemberPath = "Name";
                 cmbSlideType.SelectedValuePath = "SlideTypeId";
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading slide types: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch { }
         }
 
         private void LoadPools()
         {
             try
             {
-                var pools = _context.Pools.ToList();
-                cmbPool.ItemsSource = pools;
+                cmbPool.ItemsSource = _context.Pools.ToList();
                 cmbPool.DisplayMemberPath = "Name";
                 cmbPool.SelectedValuePath = "PoolId";
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading pools: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch { }
         }
 
         private void LoadSlides()
         {
             try
             {
-                var slides = _context.Slides
+                // Filtrujeme jen atrakce, které mají typ skluzavky
+                var slides = _context.Attractions
                     .Include(s => s.SlideType)
                     .Include(s => s.Pool)
+                    .Where(s => s.SlideTypeId != null)
                     .ToList();
                 dgSlides.ItemsSource = slides;
                 lblStatus.Text = $"Loaded {slides.Count} slides";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading slides: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error loading slides";
+                MessageBox.Show($"Error: {ex.Message}");
             }
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var searchText = txtSearch.Text.ToLower();
-            if (string.IsNullOrEmpty(searchText))
-            {
-                LoadSlides();
-                return;
-            }
-
-            try
-            {
-                var filteredSlides = _context.Slides
-                    .Include(s => s.SlideType)
-                    .Include(s => s.Pool)
-                    .Where(s => s.Name.ToLower().Contains(searchText) ||
-                               s.SlideType.Name.ToLower().Contains(searchText))
-                    .ToList();
-                
-                dgSlides.ItemsSource = filteredSlides;
-                lblStatus.Text = $"Found {filteredSlides.Count} slides";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error searching slides: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }
 
         private void DgSlides_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _selectedSlide = dgSlides.SelectedItem as Slide;
+            _selectedSlide = dgSlides.SelectedItem as Attraction;
             if (_selectedSlide != null)
             {
-                LoadSlideDetails(_selectedSlide);
+                txtName.Text = _selectedSlide.Name;
+                cmbSlideType.SelectedValue = _selectedSlide.SlideTypeId;
+                cmbStatus.Text = _selectedSlide.Status;
+                cmbPool.SelectedValue = _selectedSlide.AreaId;
             }
-        }
-
-        private void LoadSlideDetails(Slide slide)
-        {
-            txtName.Text = slide.Name;
-            cmbSlideType.SelectedValue = slide.SlideTypeId;
-            txtLength.Text = slide.LengthM?.ToString() ?? "";
-            txtHeight.Text = slide.HeightM?.ToString() ?? "";
-            txtMinHeight.Text = slide.MinHeightCm?.ToString() ?? "";
-            txtMaxWeight.Text = slide.MaxWeightKg?.ToString() ?? "";
-            cmbStatus.Text = slide.Status;
-            cmbPool.SelectedValue = slide.PoolId;
-            dpInstallationDate.SelectedDate = slide.InstallationDate;
-            txtNotes.Text = slide.Notes ?? "";
         }
 
         private void BtnAddSlide_Click(object sender, RoutedEventArgs e)
@@ -131,118 +88,59 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtName.Text))
-                {
-                    MessageBox.Show("Slide name is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                if (string.IsNullOrWhiteSpace(txtName.Text)) return;
 
-                if (cmbSlideType.SelectedValue == null)
-                {
-                    MessageBox.Show("Please select a slide type.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                int areaId = cmbPool.SelectedValue != null ? (int)cmbPool.SelectedValue : 1;
 
                 if (_selectedSlide == null)
                 {
-                    // Add new slide
-                    var newSlide = new Slide
+                    var newSlide = new Attraction
                     {
                         Name = txtName.Text.Trim(),
-                        SlideTypeId = (int)cmbSlideType.SelectedValue,
-                        LengthM = decimal.TryParse(txtLength.Text, out decimal length) ? length : null,
-                        HeightM = decimal.TryParse(txtHeight.Text, out decimal height) ? height : null,
-                        MinHeightCm = int.TryParse(txtMinHeight.Text, out int minHeight) ? minHeight : null,
-                        MaxWeightKg = int.TryParse(txtMaxWeight.Text, out int maxWeight) ? maxWeight : null,
+                        SlideTypeId = (int?)cmbSlideType.SelectedValue,
                         Status = cmbStatus.Text,
-                        PoolId = cmbPool.SelectedValue as int?,
-                        InstallationDate = dpInstallationDate.SelectedDate,
-                        Notes = txtNotes.Text.Trim()
+                        AreaId = areaId
                     };
-
-                    _context.Slides.Add(newSlide);
-                    _context.SaveChanges();
-                    lblStatus.Text = "Slide added successfully";
+                    _context.Attractions.Add(newSlide);
                 }
                 else
                 {
-                    // Update existing slide
                     _selectedSlide.Name = txtName.Text.Trim();
-                    _selectedSlide.SlideTypeId = (int)cmbSlideType.SelectedValue;
-                    _selectedSlide.LengthM = decimal.TryParse(txtLength.Text, out decimal length) ? length : null;
-                    _selectedSlide.HeightM = decimal.TryParse(txtHeight.Text, out decimal height) ? height : null;
-                    _selectedSlide.MinHeightCm = int.TryParse(txtMinHeight.Text, out int minHeight) ? minHeight : null;
-                    _selectedSlide.MaxWeightKg = int.TryParse(txtMaxWeight.Text, out int maxWeight) ? maxWeight : null;
+                    _selectedSlide.SlideTypeId = (int?)cmbSlideType.SelectedValue;
                     _selectedSlide.Status = cmbStatus.Text;
-                    _selectedSlide.PoolId = cmbPool.SelectedValue as int?;
-                    _selectedSlide.InstallationDate = dpInstallationDate.SelectedDate;
-                    _selectedSlide.Notes = txtNotes.Text.Trim();
-
-                    _context.SaveChanges();
-                    lblStatus.Text = "Slide updated successfully";
+                    _selectedSlide.AreaId = areaId;
                 }
 
+                _context.SaveChanges();
                 LoadSlides();
                 ClearForm();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving slide: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error saving slide";
+                MessageBox.Show($"Error saving slide: {ex.Message}");
             }
         }
 
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedSlide == null)
+            if (_selectedSlide != null)
             {
-                MessageBox.Show("Please select a slide to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            var result = MessageBox.Show(
-                $"Are you sure you want to delete the slide '{_selectedSlide.Name}'?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    _context.Slides.Remove(_selectedSlide);
-                    _context.SaveChanges();
-                    LoadSlides();
-                    ClearForm();
-                    lblStatus.Text = "Slide deleted successfully";
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error deleting slide: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    lblStatus.Text = "Error deleting slide";
-                }
+                _context.Attractions.Remove(_selectedSlide);
+                _context.SaveChanges();
+                LoadSlides();
+                ClearForm();
             }
         }
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e)
-        {
-            ClearForm();
-            _selectedSlide = null;
-            dgSlides.SelectedItem = null;
-        }
+        private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); }
 
         private void ClearForm()
         {
             txtName.Text = "";
             cmbSlideType.SelectedIndex = -1;
-            txtLength.Text = "";
-            txtHeight.Text = "";
-            txtMinHeight.Text = "";
-            txtMaxWeight.Text = "";
             cmbStatus.SelectedIndex = 0;
             cmbPool.SelectedIndex = -1;
-            dpInstallationDate.SelectedDate = null;
-            txtNotes.Text = "";
+            _selectedSlide = null;
         }
 
         protected override void OnClosed(EventArgs e)

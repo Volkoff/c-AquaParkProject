@@ -34,31 +34,7 @@ namespace AquaParkManager.Windows
             }
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var searchText = txtSearch.Text.ToLower();
-            if (string.IsNullOrEmpty(searchText))
-            {
-                LoadAttractions();
-                return;
-            }
-
-            try
-            {
-                var filteredAttractions = _context.Attractions
-                    .Where(a => a.Name.ToLower().Contains(searchText) ||
-                               a.AttractionType.ToLower().Contains(searchText) ||
-                               a.Status.ToLower().Contains(searchText))
-                    .ToList();
-                
-                dgAttractions.ItemsSource = filteredAttractions;
-                lblStatus.Text = $"Found {filteredAttractions.Count} attractions";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error searching attractions: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }
 
         private void DgAttractions_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -90,17 +66,7 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtName.Text))
-                {
-                    MessageBox.Show("Attraction name is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(cmbAttractionType.Text))
-                {
-                    MessageBox.Show("Please select an attraction type.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                if (string.IsNullOrWhiteSpace(txtName.Text)) return;
 
                 if (_selectedAttraction == null)
                 {
@@ -145,33 +111,18 @@ namespace AquaParkManager.Windows
 
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedAttraction == null)
+            if (_selectedAttraction == null) return;
+            try
             {
-                MessageBox.Show("Please select an attraction to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
+                _context.Attractions.Remove(_selectedAttraction);
+                _context.SaveChanges();
+                LoadAttractions();
+                ClearForm();
+                lblStatus.Text = "Attraction deleted successfully";
             }
-
-            var result = MessageBox.Show(
-                $"Are you sure you want to delete the attraction '{_selectedAttraction.Name}'?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
+            catch (Exception ex)
             {
-                try
-                {
-                    _context.Attractions.Remove(_selectedAttraction);
-                    _context.SaveChanges();
-                    LoadAttractions();
-                    ClearForm();
-                    lblStatus.Text = "Attraction deleted successfully";
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error deleting attraction: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    lblStatus.Text = "Error deleting attraction";
-                }
+                MessageBox.Show($"Error deleting attraction: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

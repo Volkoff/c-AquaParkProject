@@ -29,33 +29,20 @@ namespace AquaParkManager.Windows
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading pools: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error loading pools";
+                MessageBox.Show($"Error loading pools: {ex.Message}");
             }
         }
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             var searchText = txtSearch.Text.ToLower();
-            if (string.IsNullOrEmpty(searchText))
-            {
-                LoadPools();
-                return;
-            }
+            if (string.IsNullOrEmpty(searchText)) { LoadPools(); return; }
 
             try
             {
-                var filteredPools = _context.Pools
-                    .Where(p => p.Name.ToLower().Contains(searchText))
-                    .ToList();
-                
-                dgPools.ItemsSource = filteredPools;
-                lblStatus.Text = $"Found {filteredPools.Count} pools";
+                dgPools.ItemsSource = _context.Pools.Where(p => p.Name.ToLower().Contains(searchText)).ToList();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error searching pools: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch { }
         }
 
         private void DgPools_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -63,18 +50,11 @@ namespace AquaParkManager.Windows
             _selectedPool = dgPools.SelectedItem as Pool;
             if (_selectedPool != null)
             {
-                LoadPoolDetails(_selectedPool);
+                txtName.Text = _selectedPool.Name;
+                txtCapacity.Text = _selectedPool.Capacity.ToString();
+                chkIndoors.IsChecked = _selectedPool.Indoors == "Y";
+                // DepthMin/Max nejsou v DB, neøešíme
             }
-        }
-
-        private void LoadPoolDetails(Pool pool)
-        {
-            txtName.Text = pool.Name;
-            txtDepthMin.Text = pool.DepthMin.ToString();
-            txtDepthMax.Text = pool.DepthMax.ToString();
-            txtCapacity.Text = pool.Capacity.ToString();
-            chkIndoors.IsChecked = pool.Indoors == "Y";
-            txtNotes.Text = pool.Notes ?? "";
         }
 
         private void BtnAddPool_Click(object sender, RoutedEventArgs e)
@@ -88,124 +68,58 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtName.Text))
-                {
-                    MessageBox.Show("Pool name is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (!decimal.TryParse(txtDepthMin.Text, out decimal minDepth) || minDepth < 0)
-                {
-                    MessageBox.Show("Please enter a valid minimum depth (>= 0).", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (!decimal.TryParse(txtDepthMax.Text, out decimal maxDepth) || maxDepth < 0)
-                {
-                    MessageBox.Show("Please enter a valid maximum depth (>= 0).", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (maxDepth < minDepth)
-                {
-                    MessageBox.Show("Maximum depth must be greater than or equal to minimum depth.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (!int.TryParse(txtCapacity.Text, out int capacity) || capacity < 0)
-                {
-                    MessageBox.Show("Please enter a valid capacity (>= 0).", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                if (string.IsNullOrWhiteSpace(txtName.Text)) return;
+                int.TryParse(txtCapacity.Text, out int cap);
 
                 if (_selectedPool == null)
                 {
-                    // Add new pool
                     var newPool = new Pool
                     {
-                        Name = txtName.Text.Trim(),
-                        DepthMin = minDepth,
-                        DepthMax = maxDepth,
-                        Capacity = capacity,
-                        Indoors = chkIndoors.IsChecked == true ? "Y" : "N",
-                        Notes = txtNotes.Text.Trim()
+                        Name = txtName.Text,
+                        Capacity = cap,
+                        Indoors = chkIndoors.IsChecked == true ? "Y" : "N"
                     };
-
                     _context.Pools.Add(newPool);
-                    _context.SaveChanges();
-                    lblStatus.Text = "Pool added successfully";
                 }
                 else
                 {
-                    // Update existing pool
-                    _selectedPool.Name = txtName.Text.Trim();
-                    _selectedPool.DepthMin = minDepth;
-                    _selectedPool.DepthMax = maxDepth;
-                    _selectedPool.Capacity = capacity;
+                    _selectedPool.Name = txtName.Text;
+                    _selectedPool.Capacity = cap;
                     _selectedPool.Indoors = chkIndoors.IsChecked == true ? "Y" : "N";
-                    _selectedPool.Notes = txtNotes.Text.Trim();
-
-                    _context.SaveChanges();
-                    lblStatus.Text = "Pool updated successfully";
                 }
 
+                _context.SaveChanges();
                 LoadPools();
                 ClearForm();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving pool: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error saving pool";
+                MessageBox.Show($"Error saving pool: {ex.Message}");
             }
         }
 
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedPool == null)
+            if (_selectedPool != null)
             {
-                MessageBox.Show("Please select a pool to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            var result = MessageBox.Show(
-                $"Are you sure you want to delete the pool '{_selectedPool.Name}'?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    _context.Pools.Remove(_selectedPool);
-                    _context.SaveChanges();
-                    LoadPools();
-                    ClearForm();
-                    lblStatus.Text = "Pool deleted successfully";
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error deleting pool: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    lblStatus.Text = "Error deleting pool";
-                }
+                _context.Pools.Remove(_selectedPool);
+                _context.SaveChanges();
+                LoadPools();
+                ClearForm();
             }
         }
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e)
-        {
-            ClearForm();
-            _selectedPool = null;
-            dgPools.SelectedItem = null;
-        }
+        private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); }
 
         private void ClearForm()
         {
             txtName.Text = "";
-            txtDepthMin.Text = "";
-            txtDepthMax.Text = "";
             txtCapacity.Text = "";
+            txtDepthMin.Text = ""; // Ignorováno, jen pro UI
+            txtDepthMax.Text = "";
             chkIndoors.IsChecked = false;
             txtNotes.Text = "";
+            _selectedPool = null;
         }
 
         protected override void OnClosed(EventArgs e)

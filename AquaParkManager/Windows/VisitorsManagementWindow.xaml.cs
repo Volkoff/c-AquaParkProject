@@ -1,8 +1,9 @@
+using AquaParkManager.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using AquaParkManager.Models;
 
 namespace AquaParkManager.Windows
 {
@@ -92,34 +93,32 @@ namespace AquaParkManager.Windows
         {
             try
             {
+                var defaultAddress = _context.Address.FirstOrDefault();
+                int addressId = defaultAddress?.AddressId ?? 1; 
+
                 if (_selectedVisitor == null)
                 {
-                    // Add new visitor
-                    var newVisitor = new Visitor
-                    {
-                        FirstName = txtFirstName.Text.Trim(),
-                        LastName = txtLastName.Text.Trim(),
-                        DateOfBirth = dpDateOfBirth.SelectedDate,
-                        Email = txtEmail.Text.Trim(),
-                        Phone = txtPhone.Text.Trim(),
-                        EmergencyContact = txtEmergencyContact.Text.Trim(),
-                        Notes = txtNotes.Text.Trim()
-                    };
 
-                    _context.Visitors.Add(newVisitor);
-                    _context.SaveChanges();
-                    lblStatus.Text = "Visitor added successfully";
+
+                    string sql = "BEGIN SP_REGISTER_VISITOR(:p0, :p1, :p2, :p3, :p4); END;";
+
+                    _context.Database.ExecuteSqlRaw(sql,
+                        txtFirstName.Text.Trim(),      
+                        txtLastName.Text.Trim(),       
+                        txtEmail.Text.Trim(),          
+                        addressId,                      
+                        dpDateOfBirth.SelectedDate ?? DateTime.Now
+                    );
+
+                    lblStatus.Text = "Visitor added via PL/SQL Procedure successfully";
                 }
                 else
                 {
-                    // Update existing visitor
                     _selectedVisitor.FirstName = txtFirstName.Text.Trim();
                     _selectedVisitor.LastName = txtLastName.Text.Trim();
                     _selectedVisitor.DateOfBirth = dpDateOfBirth.SelectedDate;
                     _selectedVisitor.Email = txtEmail.Text.Trim();
                     _selectedVisitor.Phone = txtPhone.Text.Trim();
-                    _selectedVisitor.EmergencyContact = txtEmergencyContact.Text.Trim();
-                    _selectedVisitor.Notes = txtNotes.Text.Trim();
 
                     _context.SaveChanges();
                     lblStatus.Text = "Visitor updated successfully";
@@ -130,8 +129,7 @@ namespace AquaParkManager.Windows
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving visitor: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error saving visitor";
+                MessageBox.Show($"Error saving visitor: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

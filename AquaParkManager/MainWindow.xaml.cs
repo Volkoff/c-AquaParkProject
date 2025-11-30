@@ -20,6 +20,21 @@ namespace AquaParkManager
         public MainWindow()
         {
             InitializeComponent();
+
+            // Zobrazení jména v titulku nebo status baru
+            if (App.CurrentUser != null)
+            {
+                this.Title = $"Aqua Park Manager - Logged in as: {App.CurrentUser.Username}";
+            }
+        }
+
+        // Přidej metodu pro Logout (např. na kliknutí tlačítka v menu)
+        private void BtnLogout_Click(object sender, RoutedEventArgs e)
+        {
+            App.CurrentUser = null;
+            LoginWindow login = new LoginWindow();
+            login.Show();
+            this.Close();
         }
 
         private void BtnStaff_Click(object sender, RoutedEventArgs e)
