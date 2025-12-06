@@ -1,0 +1,130 @@
+﻿<Window x:Class="AquaParkManager.Windows.HRWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Human Resources" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border Background="LightGray" Padding="10">
+            <TextBlock Text="HR Management" FontSize="18" FontWeight="Bold"/>
+        </Border>
+
+        <TabControl Grid.Row="1" Margin="10">
+            <TabItem Header="Staff">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="15"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <DataGrid Name="dgStaff" Grid.Column="0" AutoGenerateColumns="False" SelectionChanged="DgStaff_SelectionChanged" IsReadOnly="True" BorderBrush="#CCC" BorderThickness="1">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*"/>
+                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <GroupBox Grid.Column="2" Header="Employee Detail">
+                        <StackPanel>
+                            <TextBlock Text="First Name:"/>
+                            <TextBox Name="txtFn" Margin="0,2"/>
+                            <TextBlock Text="Last Name:"/>
+                            <TextBox Name="txtLn" Margin="0,2"/>
+                            <TextBlock Text="Email:"/>
+                            <TextBox Name="txtEmail" Margin="0,2"/>
+                            <TextBlock Text="House No:" Margin="0,2"/>
+                            <TextBox Name="txtHouse" Margin="0,2"/>
+                            <TextBlock Text="City:" Margin="0,2"/>
+                            <TextBox Name="txtCity" Margin="0,2"/>
+                            <Button Content="💾 Save Staff" Click="BtnSaveStaff_Click" Margin="0,10,0,5"/>
+                            <Button Content="➕ New Staff" Click="BtnAddStaff_Click"/>
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Shifts">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="15"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <DataGrid Name="dgShifts" Grid.Column="0" AutoGenerateColumns="False" IsReadOnly="True" BorderBrush="#CCC" BorderThickness="1">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Date" Binding="{Binding ShiftDate, StringFormat=dd.MM.yyyy}"/>
+                            <DataGridTextColumn Header="Staff" Binding="{Binding Staff.FullName}"/>
+                            <DataGridTextColumn Header="Shift Type" Binding="{Binding Shift.ShiftName}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <GroupBox Grid.Column="2" Header="Assign Shift">
+                        <StackPanel>
+                            <TextBlock Text="Date:"/>
+                            <DatePicker Name="dpShiftDate" Margin="0,5"/>
+                            <TextBlock Text="Staff:"/>
+                            <ComboBox Name="cmbShiftStaff" DisplayMemberPath="FullName" SelectedValuePath="StaffId" Margin="0,5"/>
+                            <TextBlock Text="Shift:"/>
+                            <ComboBox Name="cmbShiftType" DisplayMemberPath="ShiftName" SelectedValuePath="ShiftId" Margin="0,5"/>
+                            <Button Content="➕ Assign" Click="BtnAssignShift_Click" Margin="0,10"/>
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Training &amp; Certs">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <GroupBox Grid.Column="0" Header="Certifications">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <DataGrid Name="dgCerts" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,0,10">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Staff" Binding="{Binding Staff.FullName}"/>
+                                    <DataGridTextColumn Header="Cert" Binding="{Binding CertName}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel Grid.Row="1">
+                                <TextBlock Text="Staff:"/>
+                                <ComboBox Name="cmbCertStaff" DisplayMemberPath="FullName" SelectedValuePath="StaffId"/>
+                                <TextBlock Text="Cert Name:"/>
+                                <TextBox Name="txtCertName"/>
+                                <Button Content="Add Cert" Click="BtnAddCert_Click" Margin="0,5"/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+
+                    <GroupBox Grid.Column="2" Header="Training">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <DataGrid Name="dgTraining" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,0,10">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Staff" Binding="{Binding Staff.FullName}"/>
+                                    <DataGridTextColumn Header="Training" Binding="{Binding TrainingName}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel Grid.Row="1">
+                                <TextBlock Text="Staff:"/>
+                                <ComboBox Name="cmbTrainStaff" DisplayMemberPath="FullName" SelectedValuePath="StaffId"/>
+                                <TextBlock Text="Training Name:"/>
+                                <TextBox Name="txtTrainName"/>
+                                <Button Content="Add Training" Click="BtnAddTrain_Click" Margin="0,5"/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

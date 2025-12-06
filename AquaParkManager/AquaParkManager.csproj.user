@@ -7,10 +7,16 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Windows\LoginWindow.xaml.cs">
+    <Compile Update="Windows\FacilitiesWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Windows\MediaManagementWindow.xaml.cs">
+    <Compile Update="Windows\HRWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Windows\SalesWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Windows\LoginWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

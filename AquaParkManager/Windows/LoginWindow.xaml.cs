@@ -12,6 +12,12 @@ namespace AquaParkManager.Windows
             InitializeComponent();
         }
 
+
+        private void BtnExit_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             string username = txtUsername.Text.Trim();
