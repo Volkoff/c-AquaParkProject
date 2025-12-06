@@ -16,9 +16,20 @@ namespace AquaParkManager.Windows
         {
             InitializeComponent();
             _context = new AquaParkContext();
+            LoadBookings();
             LoadTicketTypes();
             LoadTickets();
             ClearForm();
+        }
+
+        private void LoadBookings()
+        {
+            try
+            {
+                var bookings = _context.Bookings.OrderByDescending(b => b.BookingId).ToList();
+                cmbBooking.ItemsSource = bookings;
+            }
+            catch { }
         }
 
         private void LoadTicketTypes()
@@ -37,7 +48,6 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // Zde už voláme BookingItems, ne Tickets
                 var items = _context.BookingItems
                     .Include(t => t.TicketType)
                     .ToList();
@@ -50,16 +60,15 @@ namespace AquaParkManager.Windows
             }
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }
-
         private void DgTickets_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedItem = dgTickets.SelectedItem as BookingItem;
             if (_selectedItem != null)
             {
+                cmbBooking.SelectedValue = _selectedItem.BookingId;
                 cmbTicketType.SelectedValue = _selectedItem.TicketTypeId;
+                txtQuantity.Text = _selectedItem.Quantity.ToString();
                 txtPricePaid.Text = _selectedItem.UnitPrice.ToString();
-                // Ostatní pole ignorujeme (datumy atd.), protože v DB nejsou
             }
         }
 
@@ -74,32 +83,32 @@ namespace AquaParkManager.Windows
             try
             {
                 if (cmbTicketType.SelectedValue == null) return;
-                decimal.TryParse(txtPricePaid.Text, out decimal price);
-
-                // Potøebujeme existující ID objednávky
-                var defaultBooking = _context.Bookings.FirstOrDefault();
-                int bookingId = defaultBooking?.BookingId ?? 0;
-
-                if (bookingId == 0)
+                if (cmbBooking.SelectedValue == null)
                 {
-                    MessageBox.Show("Create a Booking first!");
+                    MessageBox.Show("Please select a Booking ID first!");
                     return;
                 }
+
+                decimal.TryParse(txtPricePaid.Text, out decimal price);
+                int.TryParse(txtQuantity.Text, out int qty);
+                if (qty < 1) qty = 1;
 
                 if (_selectedItem == null)
                 {
                     var newItem = new BookingItem
                     {
-                        BookingId = bookingId,
+                        BookingId = (int)cmbBooking.SelectedValue,
                         TicketTypeId = (int)cmbTicketType.SelectedValue,
-                        Quantity = 1,
+                        Quantity = qty,
                         UnitPrice = price
                     };
                     _context.BookingItems.Add(newItem);
                 }
                 else
                 {
+                    _selectedItem.BookingId = (int)cmbBooking.SelectedValue;
                     _selectedItem.TicketTypeId = (int)cmbTicketType.SelectedValue;
+                    _selectedItem.Quantity = qty;
                     _selectedItem.UnitPrice = price;
                 }
 
@@ -128,7 +137,9 @@ namespace AquaParkManager.Windows
 
         private void ClearForm()
         {
+            cmbBooking.SelectedIndex = -1;
             cmbTicketType.SelectedIndex = -1;
+            txtQuantity.Text = "1";
             txtPricePaid.Text = "";
             _selectedItem = null;
         }

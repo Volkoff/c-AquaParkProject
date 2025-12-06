@@ -1,150 +1,73 @@
 <Window x:Class="AquaParkManager.Windows.MaintenanceManagementWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        Title="Maintenance Management" Height="600" Width="1200" WindowStartupLocation="CenterScreen">
+        Title="Maintenance Management" Height="500" Width="1000" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <!-- Header -->
+
         <Border Grid.Row="0" Background="#FF2E86AB" Padding="15">
             <StackPanel>
-                <TextBlock Text="🔧 Maintenance Management" 
-                          FontSize="20" 
-                          FontWeight="Bold" 
-                          Foreground="White"/>
-                <TextBlock Text="Manage maintenance records and repairs" 
-                          FontSize="12" 
-                          Foreground="White" 
-                          Margin="0,5,0,0"/>
+                <TextBlock Text="🔧 Maintenance Management" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Manage operational logs (DB stores Description and Date only)" FontSize="12" Foreground="White" Margin="0,5,0,0"/>
             </StackPanel>
         </Border>
-        
-        <!-- Main Content -->
+
         <Grid Grid.Row="1" Margin="20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="10"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
-            
-            <!-- Maintenance Records List -->
+
             <GroupBox Grid.Column="0" Header="Maintenance Records" FontWeight="Bold">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    
-                    <!-- Search and Add Button -->
+
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBox x:Name="txtSearch" 
-                                Width="200" 
-                                Height="30" 
-                                VerticalContentAlignment="Center"
-                                TextChanged="TxtSearch_TextChanged"
-                                Tag="Search maintenance..."/>
-                        <Button x:Name="btnAddMaintenance" 
-                               Content="➕ Add Record" 
-                               Margin="10,0,0,0" 
-                               Padding="15,5"
-                               Background="#FF28A745"
-                               Foreground="White"
-                               BorderThickness="0"
-                               Click="BtnAddMaintenance_Click"/>
+                        <TextBox x:Name="txtSearch" Width="200" Height="30" VerticalContentAlignment="Center" TextChanged="TxtSearch_TextChanged"/>
+                        <Button x:Name="btnAddMaintenance" Content="➕ Add Record" Margin="10,0,0,0" Padding="15,5" Background="#FF28A745" Foreground="White" BorderThickness="0" Click="BtnAddMaintenance_Click"/>
                     </StackPanel>
-                    
-                    <!-- Maintenance DataGrid -->
-                    <DataGrid x:Name="dgMaintenance" 
-                             Grid.Row="1" 
-                             AutoGenerateColumns="False" 
-                             CanUserAddRows="False"
-                             SelectionChanged="DgMaintenance_SelectionChanged">
+
+                    <DataGrid x:Name="dgMaintenance" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" SelectionChanged="DgMaintenance_SelectionChanged">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding MaintenanceId}" Width="50" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Attraction" Binding="{Binding Attraction.Name}" Width="120"/>
-                            <DataGridTextColumn Header="Reported By" Binding="{Binding Staff.FirstName}" Width="100"/>
+                            <DataGridTextColumn Header="Reported By" Binding="{Binding Staff.FullName}" Width="100"/>
                             <DataGridTextColumn Header="Report Date" Binding="{Binding ReportDate, StringFormat=dd/MM/yyyy}" Width="100"/>
-                            <DataGridTextColumn Header="Completed Date" Binding="{Binding CompletedDate, StringFormat=dd/MM/yyyy}" Width="100"/>
-                            <DataGridTextColumn Header="Cost" Binding="{Binding Cost, StringFormat=C}" Width="80"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
             </GroupBox>
-            
-            <!-- Details Panel -->
-            <GroupBox Grid.Column="2" Header="Maintenance Details" FontWeight="Bold">
+
+            <GroupBox Grid.Column="2" Header="Details" FontWeight="Bold">
                 <ScrollViewer>
                     <StackPanel Margin="10">
-                        <TextBlock Text="Attraction:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock Text="Attraction / Pool ID (Related ID):" FontWeight="Bold" Margin="0,0,0,5"/>
                         <ComboBox x:Name="cmbAttraction" Margin="0,0,0,10"/>
-                        
+
                         <TextBlock Text="Reported By:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <ComboBox x:Name="cmbStaff" Margin="0,0,0,10"/>
-                        
+
                         <TextBlock Text="Report Date:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <DatePicker x:Name="dpReportDate" Margin="0,0,0,10"/>
-                        
+
                         <TextBlock Text="Problem Description:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtProblemDescription" 
-                                Height="60" 
-                                TextWrapping="Wrap" 
-                                AcceptsReturn="True" 
-                                VerticalScrollBarVisibility="Auto"
-                                Margin="0,0,0,10"/>
-                        
-                        <TextBlock Text="Action Taken:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtActionTaken" 
-                                Height="60" 
-                                TextWrapping="Wrap" 
-                                AcceptsReturn="True" 
-                                VerticalScrollBarVisibility="Auto"
-                                Margin="0,0,0,10"/>
-                        
-                        <TextBlock Text="Completed Date:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <DatePicker x:Name="dpCompletedDate" Margin="0,0,0,10"/>
-                        
-                        <TextBlock Text="Cost:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtCost" Margin="0,0,0,15"/>
-                        
-                        <!-- Action Buttons -->
-                        <Button x:Name="btnSave" 
-                               Content="💾 Save" 
-                               Background="#FF007BFF" 
-                               Foreground="White" 
-                               BorderThickness="0"
-                               Padding="10,5"
-                               Margin="0,0,0,5"
-                               Click="BtnSave_Click"/>
-                        
-                        <Button x:Name="btnDelete" 
-                               Content="🗑️ Delete" 
-                               Background="#FFDC3545" 
-                               Foreground="White" 
-                               BorderThickness="0"
-                               Padding="10,5"
-                               Margin="0,0,0,5"
-                               Click="BtnDelete_Click"/>
-                        
-                        <Button x:Name="btnClear" 
-                               Content="🔄 Clear" 
-                               Background="#FF6C757D" 
-                               Foreground="White" 
-                               BorderThickness="0"
-                               Padding="10,5"
-                               Click="BtnClear_Click"/>
+                        <TextBox x:Name="txtProblemDescription" Height="100" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15"/>
+
+                        <Button x:Name="btnSave" Content="💾 Save" Background="#FF007BFF" Foreground="White" BorderThickness="0" Padding="10,5" Margin="0,0,0,5" Click="BtnSave_Click"/>
+                        <Button x:Name="btnDelete" Content="🗑️ Delete" Background="#FFDC3545" Foreground="White" BorderThickness="0" Padding="10,5" Margin="0,0,0,5" Click="BtnDelete_Click"/>
+                        <Button x:Name="btnClear" Content="🔄 Clear" Background="#FF6C757D" Foreground="White" BorderThickness="0" Padding="10,5" Click="BtnClear_Click"/>
                     </StackPanel>
                 </ScrollViewer>
             </GroupBox>
         </Grid>
-        
-        <!-- Status Bar -->
+
         <StatusBar Grid.Row="2" Background="#FFF8F9FA">
             <StatusBarItem>
                 <TextBlock x:Name="lblStatus" Text="Ready"/>

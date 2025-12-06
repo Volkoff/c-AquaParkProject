@@ -26,6 +26,7 @@ namespace AquaParkManager.Windows
         {
             try
             {
+                // Naèteme atrakce pro výbìr
                 var attractions = _context.Attractions.ToList();
                 cmbAttraction.ItemsSource = attractions;
                 cmbAttraction.DisplayMemberPath = "Name";
@@ -76,29 +77,8 @@ namespace AquaParkManager.Windows
                     cmbAttraction.SelectedValue = _selectedMaintenance.RelatedId.Value;
                 }
 
-                string rawDesc = _selectedMaintenance.ProblemDescription ?? "";
-
-                txtProblemDescription.Text = GetValueFromTag(rawDesc, "PROBLEM");
-                txtActionTaken.Text = GetValueFromTag(rawDesc, "ACTION");
-                txtCost.Text = GetValueFromTag(rawDesc, "COST");
-
-                string dateStr = GetValueFromTag(rawDesc, "COMPLETED");
-                if (DateTime.TryParse(dateStr, out DateTime dt)) dpCompletedDate.SelectedDate = dt;
-                else dpCompletedDate.SelectedDate = null;
+                txtProblemDescription.Text = _selectedMaintenance.ProblemDescription ?? "";
             }
-        }
-
-        private string GetValueFromTag(string text, string tag)
-        {
-            string startTag = $"[{tag}]:";
-            int startIndex = text.IndexOf(startTag);
-            if (startIndex == -1) return "";
-
-            startIndex += startTag.Length;
-            int endIndex = text.IndexOf("|", startIndex);
-            if (endIndex == -1) endIndex = text.Length;
-
-            return text.Substring(startIndex, endIndex - startIndex).Trim();
         }
 
         private void BtnAddMaintenance_Click(object sender, RoutedEventArgs e)
@@ -111,11 +91,7 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                if (cmbAttraction.SelectedValue == null) return;
-                int attractionId = (int)cmbAttraction.SelectedValue;
-
-                string completedStr = dpCompletedDate.SelectedDate?.ToString("yyyy-MM-dd") ?? "";
-                string packedDesc = $"[PROBLEM]: {txtProblemDescription.Text} | [ACTION]: {txtActionTaken.Text} | [COST]: {txtCost.Text} | [COMPLETED]: {completedStr}";
+                int? attractionId = cmbAttraction.SelectedValue as int?;
 
                 if (_selectedMaintenance == null)
                 {
@@ -126,7 +102,7 @@ namespace AquaParkManager.Windows
                         ReportedBy = cmbStaff.SelectedValue as int?,
                         ReportDate = dpReportDate.SelectedDate ?? DateTime.Now,
                         LogType = "MAINTENANCE",
-                        ProblemDescription = packedDesc
+                        ProblemDescription = txtProblemDescription.Text
                     };
                     _context.MaintenanceRecords.Add(newRecord);
                 }
@@ -135,7 +111,7 @@ namespace AquaParkManager.Windows
                     _selectedMaintenance.RelatedId = attractionId;
                     _selectedMaintenance.ReportedBy = cmbStaff.SelectedValue as int?;
                     _selectedMaintenance.ReportDate = dpReportDate.SelectedDate ?? DateTime.Now;
-                    _selectedMaintenance.ProblemDescription = packedDesc;
+                    _selectedMaintenance.ProblemDescription = txtProblemDescription.Text;
                 }
 
                 _context.SaveChanges();
@@ -167,9 +143,6 @@ namespace AquaParkManager.Windows
             cmbStaff.SelectedIndex = -1;
             dpReportDate.SelectedDate = DateTime.Now;
             txtProblemDescription.Text = "";
-            txtActionTaken.Text = "";
-            dpCompletedDate.SelectedDate = null;
-            txtCost.Text = "";
             _selectedMaintenance = null;
         }
 

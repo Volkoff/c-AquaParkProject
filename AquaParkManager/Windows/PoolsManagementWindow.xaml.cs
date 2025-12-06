@@ -52,33 +52,7 @@ namespace AquaParkManager.Windows
                 txtName.Text = _selectedPool.Name;
                 txtCapacity.Text = _selectedPool.Capacity.ToString();
                 chkIndoors.IsChecked = _selectedPool.Indoors == "Y";
-
-                txtDepthMin.Text = "";
-                txtDepthMax.Text = "";
-                string notes = _selectedPool.Notes ?? "";
-
-                if (notes.Contains("Hloubka:"))
-                {
-                    try
-                    {
-                        var parts = notes.Split('|');
-                        var depthPart = parts[0].Replace("Hloubka:", "").Replace("m", "").Trim();
-                        var depthValues = depthPart.Split('-');
-
-                        if (depthValues.Length > 0) txtDepthMin.Text = depthValues[0].Trim();
-                        if (depthValues.Length > 1) txtDepthMax.Text = depthValues[1].Trim();
-
-                        if (parts.Length > 1)
-                            txtNotes.Text = parts[1].Replace("Pozn:", "").Trim();
-                        else
-                            txtNotes.Text = "";
-                    }
-                    catch { txtNotes.Text = notes; }
-                }
-                else
-                {
-                    txtNotes.Text = notes;
-                }
+                txtNotes.Text = _selectedPool.Notes ?? "";
             }
         }
 
@@ -96,9 +70,6 @@ namespace AquaParkManager.Windows
                 if (string.IsNullOrWhiteSpace(txtName.Text)) return;
                 int.TryParse(txtCapacity.Text, out int cap);
 
-                string depthInfo = $"Hloubka: {txtDepthMin.Text}-{txtDepthMax.Text}m";
-                string finalNotes = $"{depthInfo} | Pozn: {txtNotes.Text}";
-
                 if (_selectedPool == null)
                 {
                     var newPool = new Pool
@@ -106,7 +77,7 @@ namespace AquaParkManager.Windows
                         Name = txtName.Text,
                         Capacity = cap,
                         Indoors = chkIndoors.IsChecked == true ? "Y" : "N",
-                        Notes = finalNotes
+                        Notes = txtNotes.Text
                     };
                     _context.Pools.Add(newPool);
                 }
@@ -115,7 +86,7 @@ namespace AquaParkManager.Windows
                     _selectedPool.Name = txtName.Text;
                     _selectedPool.Capacity = cap;
                     _selectedPool.Indoors = chkIndoors.IsChecked == true ? "Y" : "N";
-                    _selectedPool.Notes = finalNotes;
+                    _selectedPool.Notes = txtNotes.Text;
                 }
 
                 _context.SaveChanges();
@@ -145,8 +116,6 @@ namespace AquaParkManager.Windows
         {
             txtName.Text = "";
             txtCapacity.Text = "";
-            txtDepthMin.Text = "";
-            txtDepthMax.Text = "";
             chkIndoors.IsChecked = false;
             txtNotes.Text = "";
             _selectedPool = null;

@@ -51,7 +51,7 @@ namespace AquaParkManager.Windows
                 var slides = _context.Attractions
                     .Include(s => s.SlideType)
                     .Include(s => s.Pool)
-                    .Where(s => s.SlideTypeId != null)
+                    .Where(s => s.SlideTypeId != null) // Filtrujeme jen atrakce, které mají typ skluzavky
                     .ToList();
                 dgSlides.ItemsSource = slides;
                 lblStatus.Text = $"Loaded {slides.Count} slides";
@@ -71,13 +71,6 @@ namespace AquaParkManager.Windows
                 cmbSlideType.SelectedValue = _selectedSlide.SlideTypeId;
                 cmbStatus.Text = _selectedSlide.Status;
                 cmbPool.SelectedValue = _selectedSlide.AreaId;
-
-                // Vyèistíme pole, která se neukládají do DB
-                txtLength.Text = "";
-                txtHeight.Text = "";
-                txtMinHeight.Text = "";
-                txtMaxWeight.Text = "";
-                txtNotes.Text = "";
             }
         }
 
@@ -96,7 +89,7 @@ namespace AquaParkManager.Windows
 
                 if (cmbPool.SelectedValue == null)
                 {
-                    MessageBox.Show("Select a Pool first.");
+                    MessageBox.Show("Select a Pool (Area) first. It is required.");
                     return;
                 }
                 int areaId = (int)cmbPool.SelectedValue;
@@ -150,11 +143,6 @@ namespace AquaParkManager.Windows
             cmbSlideType.SelectedIndex = -1;
             cmbStatus.SelectedIndex = 0;
             cmbPool.SelectedIndex = -1;
-            txtLength.Text = "";
-            txtHeight.Text = "";
-            txtMinHeight.Text = "";
-            txtMaxWeight.Text = "";
-            txtNotes.Text = "";
             _selectedSlide = null;
         }
 

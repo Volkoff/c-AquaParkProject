@@ -55,6 +55,7 @@ namespace AquaParkManager.Models
 
         public override int SaveChanges()
         {
+            // Ponecháno beze zmìny (Audit log logic)
             var entries = ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
@@ -66,33 +67,25 @@ namespace AquaParkManager.Models
                 {
                     var createdAtProp = entityEntry.Entity.GetType().GetProperty("CreatedAt");
                     if (createdAtProp != null && createdAtProp.CanWrite)
-                    {
                         createdAtProp.SetValue(entityEntry.Entity, DateTime.Now);
-                    }
 
                     if (currentUserId.HasValue)
                     {
                         var createdByProp = entityEntry.Entity.GetType().GetProperty("CreatedByUserId");
                         if (createdByProp != null && createdByProp.CanWrite)
-                        {
                             createdByProp.SetValue(entityEntry.Entity, currentUserId.Value);
-                        }
                     }
                 }
 
                 var updatedAtProp = entityEntry.Entity.GetType().GetProperty("UpdatedAt");
                 if (updatedAtProp != null && updatedAtProp.CanWrite)
-                {
                     updatedAtProp.SetValue(entityEntry.Entity, DateTime.Now);
-                }
 
                 if (currentUserId.HasValue)
                 {
                     var updatedByProp = entityEntry.Entity.GetType().GetProperty("UpdatedByUserId");
                     if (updatedByProp != null && updatedByProp.CanWrite)
-                    {
                         updatedByProp.SetValue(entityEntry.Entity, currentUserId.Value);
-                    }
                 }
             }
 
@@ -108,6 +101,8 @@ namespace AquaParkManager.Models
         [Column("UPDATED_BY_USER_ID")] public int? UpdatedByUserId { get; set; }
     }
 
+    // --- Zbytek entit beze zmìn, pouze Attraction a MaintenanceRecord jsou oøezané ---
+
     [Table("USERS")]
     public class User : AuditableEntity
     {
@@ -116,7 +111,6 @@ namespace AquaParkManager.Models
         [Column("PASSWORD_HASH")] public string PasswordHash { get; set; } = string.Empty;
         [Column("EMAIL")] public string Email { get; set; } = string.Empty;
         [Column("IS_ACTIVE")] public string IsActive { get; set; } = "Y";
-
         [Column("STAFF_STAFF_ID")] public int? StaffId { get; set; }
         [Column("VISITORS_VISITOR_ID")] public int? VisitorId { get; set; }
     }
@@ -128,9 +122,7 @@ namespace AquaParkManager.Models
         [Column("STREET")] public string? Street { get; set; }
         [Column("HOUSE_NUMBER")] public string HouseNumber { get; set; } = string.Empty;
         [Column("POSTAL_CODES_POSTAL_CODE_ID")] public int PostalCodeId { get; set; }
-
-        [ForeignKey("PostalCodeId")]
-        public virtual PostalCode? PostalCode { get; set; }
+        [ForeignKey("PostalCodeId")] public virtual PostalCode? PostalCode { get; set; }
     }
 
     [Table("POSTAL_CODES")]
@@ -155,10 +147,8 @@ namespace AquaParkManager.Models
         [Column("HIRE_DATE")] public DateTime HireDate { get; set; } = DateTime.Now;
         [Column("NOTES")] public string? Notes { get; set; }
         [Column("ACTIVE")] public string Active { get; set; } = "Y";
-
         [Column("ADDRESS_ADDRESS_ID")] public int AddressId { get; set; }
         [ForeignKey("AddressId")] public virtual Address? Address { get; set; }
-
         [NotMapped] public string FullName => $"{FirstName} {LastName}";
     }
 
@@ -189,10 +179,8 @@ namespace AquaParkManager.Models
         [Column("EMAIL")] public string? Email { get; set; }
         [Column("PHONE")] public string? Phone { get; set; }
         [Column("NOTES")] public string? Notes { get; set; }
-
         [Column("ADDRESS_ADDRESS_ID")] public int AddressId { get; set; }
         [ForeignKey("AddressId")] public virtual Address? Address { get; set; }
-
         [NotMapped] public string? EmergencyContact { get; set; }
         [NotMapped] public string FullName => $"{FirstName} {LastName}";
     }
@@ -202,16 +190,12 @@ namespace AquaParkManager.Models
     {
         [Key][Column("BOOKING_ID")] public int BookingId { get; set; }
         [Column("BOOKING_REF")] public string? BookingRef { get; set; }
-
         [Column("CREATED_DATE")] public DateTime CreatedDate { get; set; } = DateTime.Now;
-
         [Column("TOTAL_AMOUNT")] public decimal TotalAmount { get; set; } = 0;
         [Column("STATUS")] public string Status { get; set; } = "CONFIRMED";
         [Column("NOTES")] public string? Notes { get; set; }
-
         [Column("VISITORS_VISITOR_ID")] public int VisitorId { get; set; }
         [ForeignKey("VisitorId")] public virtual Visitor? Visitor { get; set; }
-
         [NotMapped] public string? CustomerName => Visitor?.FullName;
     }
 
@@ -222,10 +206,8 @@ namespace AquaParkManager.Models
         [Column("BOOKINGS_BOOKING_ID")] public int BookingId { get; set; }
         [Column("QUANTITY")] public int Quantity { get; set; } = 1;
         [Column("UNIT_PRICE")] public decimal UnitPrice { get; set; } = 0;
-
         [Column("TICKET_TYPES_TICKET_TYPE_ID")] public int TicketTypeId { get; set; }
         [ForeignKey("TicketTypeId")] public virtual TicketType? TicketType { get; set; }
-
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         [Column("LINE_TOTAL")] public decimal LineTotal { get; set; }
     }
@@ -243,13 +225,7 @@ namespace AquaParkManager.Models
         [Column("PARK_AREAS_AREA_ID")] public int AreaId { get; set; }
         [ForeignKey("AreaId")] public virtual Pool? Pool { get; set; }
 
-        [NotMapped] public int? Capacity { get; set; }
-        [NotMapped] public string? Notes { get; set; }
-        [NotMapped] public string AttractionType => SlideTypeId != null ? "Slide" : "Other";
-        [NotMapped] public int? ObjectId { get; set; }
-        [NotMapped] public decimal? LengthM { get; set; }
-        [NotMapped] public decimal? HeightM { get; set; }
-        [NotMapped] public int? MinHeightCm { get; set; }
+        // Odstranìny neexistující sloupce (Capacity, Notes, Dimensions...)
     }
 
     [Table("MEDIA")]
@@ -316,10 +292,7 @@ namespace AquaParkManager.Models
 
         [ForeignKey("ReportedBy")] public virtual Staff? Staff { get; set; }
 
-        [NotMapped] public int AttractionId { get; set; }
-        [NotMapped] public string? ActionTaken { get; set; }
-        [NotMapped] public DateTime? CompletedDate { get; set; }
-        [NotMapped] public decimal Cost { get; set; }
+        // Odstranìny neexistující sloupce (Cost, ActionTaken, CompletedDate)
     }
 
     [Table("PAYMENTS")]
