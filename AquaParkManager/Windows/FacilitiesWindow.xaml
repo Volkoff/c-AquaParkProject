@@ -30,7 +30,7 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150"/>
                                 <DataGridTextColumn Header="Type" Binding="{Binding SlideType.Name}" Width="100"/>
-                                <DataGridTextColumn Header="Pool" Binding="{Binding Pool.Name}" Width="100"/>
+                                <DataGridTextColumn Header="Area" Binding="{Binding ParkArea.Name}" Width="100"/>
                                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
                             </DataGrid.Columns>
                         </DataGrid>
@@ -39,8 +39,8 @@
                         <StackPanel>
                             <TextBlock Text="Name:" FontWeight="Bold"/>
                             <TextBox Name="txtAttrName" Margin="0,5"/>
-                            <TextBlock Text="Pool:" FontWeight="Bold"/>
-                            <ComboBox Name="cmbAttrPool" Margin="0,5" DisplayMemberPath="Name" SelectedValuePath="PoolId"/>
+                            <TextBlock Text="Area / Pool:" FontWeight="Bold"/>
+                            <ComboBox Name="cmbAttrPool" Margin="0,5" DisplayMemberPath="Name" SelectedValuePath="AreaId"/>
                             <TextBlock Text="Type:" FontWeight="Bold"/>
                             <ComboBox Name="cmbAttrType" Margin="0,5" DisplayMemberPath="Name" SelectedValuePath="SlideTypeId"/>
                             <TextBlock Text="Status:" FontWeight="Bold"/>
@@ -101,19 +101,14 @@
                         <StackPanel Orientation="Horizontal" Margin="5">
                             <TextBlock Text="Name:" VerticalAlignment="Center"/>
                             <TextBox Name="txtInvName" Width="120" Margin="5,0"/>
-
                             <TextBlock Text="Qty:" VerticalAlignment="Center"/>
                             <TextBox Name="txtInvQty" Width="40" Margin="5,0"/>
-
                             <TextBlock Text="Min:" VerticalAlignment="Center"/>
                             <TextBox Name="txtInvMin" Width="40" Margin="5,0" Text="10"/>
-
                             <TextBlock Text="Price:" VerticalAlignment="Center"/>
                             <TextBox Name="txtInvPrice" Width="50" Margin="5,0"/>
-
                             <TextBlock Text="Supplier:" VerticalAlignment="Center"/>
                             <ComboBox Name="cmbInvSup" Width="120" DisplayMemberPath="Name" SelectedValuePath="SupplierId" Margin="5,0"/>
-
                             <Button Content="Add" Click="BtnAddInv_Click" Width="80"/>
                         </StackPanel>
                     </GroupBox>
@@ -138,8 +133,8 @@
                         <StackPanel>
                             <TextBlock Text="Name:" FontWeight="Bold"/>
                             <TextBox Name="txtConcName" Margin="0,5"/>
-                            <TextBlock Text="Location (Pool/Area):" FontWeight="Bold"/>
-                            <ComboBox Name="cmbConcArea" DisplayMemberPath="Name" SelectedValuePath="PoolId" Margin="0,5"/>
+                            <TextBlock Text="Location (Area):" FontWeight="Bold"/>
+                            <ComboBox Name="cmbConcArea" DisplayMemberPath="Name" SelectedValuePath="AreaId" Margin="0,5"/>
                             <TextBlock Text="Status:" FontWeight="Bold"/>
                             <ComboBox Name="cmbConcStatus" Margin="0,5" SelectedValuePath="Content">
                                 <ComboBoxItem Content="OPEN"/>
@@ -158,7 +153,6 @@
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
-
                     <GroupBox Grid.Column="0" Header="Safety Standards">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -179,7 +173,6 @@
                             </StackPanel>
                         </Grid>
                     </GroupBox>
-
                     <GroupBox Grid.Column="2" Header="Weather Log">
                         <Grid>
                             <Grid.RowDefinitions>

@@ -49,6 +49,16 @@
                             <TextBlock Text="City:" Margin="0,2"/>
                             <TextBox Name="txtCity" Margin="0,2"/>
 
+                            <GroupBox Header="Assigned Roles" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <ListBox Name="lstRoles" Height="80" DisplayMemberPath="Role.RoleName" Margin="0,0,0,5"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ComboBox Name="cmbAvailableRoles" Width="120" DisplayMemberPath="RoleName" SelectedValuePath="RoleId"/>
+                                        <Button Content="➕ Add Role" Click="BtnAddRole_Click" Margin="5,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+
                             <Button Content="💾 Save Staff" Click="BtnSaveStaff_Click" Margin="0,10,0,5"/>
                             <Button Content="➕ New Staff" Click="BtnAddStaff_Click"/>
                         </StackPanel>
@@ -91,7 +101,6 @@
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
-
                     <GroupBox Grid.Column="0" Header="Certifications">
                         <Grid>
                             <Grid.RowDefinitions>
