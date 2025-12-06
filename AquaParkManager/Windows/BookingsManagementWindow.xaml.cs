@@ -16,12 +16,11 @@ namespace AquaParkManager.Windows
         {
             InitializeComponent();
             _context = new AquaParkContext();
-            LoadVisitors(); // Nová metoda
+            LoadVisitors();
             LoadBookings();
             ClearForm();
         }
 
-        // --- NOVÉ: Naètení návštìvníkù pro ComboBox ---
         private void LoadVisitors()
         {
             try
@@ -29,17 +28,13 @@ namespace AquaParkManager.Windows
                 var visitors = _context.Visitors.ToList();
                 cmbVisitor.ItemsSource = visitors;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error loading visitors: " + ex.Message);
-            }
+            catch { }
         }
 
         private void LoadBookings()
         {
             try
             {
-                // Musíme naèíst i data o Visitorovi (Include), abychom vidìli jméno
                 var bookings = _context.Bookings
                     .Include(b => b.Visitor)
                     .ToList();
@@ -52,36 +47,15 @@ namespace AquaParkManager.Windows
             }
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var searchText = txtSearch.Text.ToLower();
-            if (string.IsNullOrEmpty(searchText)) { LoadBookings(); return; }
-
-            try
-            {
-                // Filtrujeme podle referenèního èísla
-                var filteredBookings = _context.Bookings
-                    .Include(b => b.Visitor)
-                    .Where(b => (b.BookingRef != null && b.BookingRef.ToLower().Contains(searchText)))
-                    .ToList();
-
-                dgBookings.ItemsSource = filteredBookings;
-            }
-            catch { }
-        }
-
         private void DgBookings_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedBooking = dgBookings.SelectedItem as Booking;
             if (_selectedBooking != null)
             {
                 txtBookingRef.Text = _selectedBooking.BookingRef ?? "";
-
-                // --- NOVÉ: Nastavení vybraného návštìvníka ---
                 cmbVisitor.SelectedValue = _selectedBooking.VisitorId;
-
                 dpCreatedDate.SelectedDate = _selectedBooking.CreatedDate;
-                txtTotalAmount.Text = _selectedBooking.TotalAmount.ToString();
+                txtTotalAmount.Text = _selectedBooking.TotalAmount.ToString("C");
                 cmbStatus.Text = _selectedBooking.Status;
                 txtNotes.Text = _selectedBooking.Notes ?? "";
             }
@@ -98,12 +72,9 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                if (!decimal.TryParse(txtTotalAmount.Text, out decimal totalAmount)) totalAmount = 0;
-
-                // Validace: Musí být vybrán návštìvník
                 if (cmbVisitor.SelectedValue == null)
                 {
-                    MessageBox.Show("Please select a visitor.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Please select a visitor.");
                     return;
                 }
                 int visitorId = (int)cmbVisitor.SelectedValue;
@@ -113,11 +84,11 @@ namespace AquaParkManager.Windows
                     var newBooking = new Booking
                     {
                         BookingRef = txtBookingRef.Text.Trim(),
-                        VisitorId = visitorId, // --- ZDE SE UKLÁDÁ ID ---
+                        VisitorId = visitorId,
                         CreatedDate = dpCreatedDate.SelectedDate ?? DateTime.Now,
-                        TotalAmount = totalAmount,
                         Status = cmbStatus.Text,
-                        Notes = txtNotes.Text.Trim()
+                        Notes = txtNotes.Text.Trim(),
+                        TotalAmount = 0 // Inicializace na 0, DB si to dopoèítá podle položek
                     };
 
                     _context.Bookings.Add(newBooking);
@@ -125,11 +96,11 @@ namespace AquaParkManager.Windows
                 else
                 {
                     _selectedBooking.BookingRef = txtBookingRef.Text.Trim();
-                    _selectedBooking.VisitorId = visitorId; // --- ZDE SE UKLÁDÁ ID ---
+                    _selectedBooking.VisitorId = visitorId;
                     _selectedBooking.CreatedDate = dpCreatedDate.SelectedDate ?? _selectedBooking.CreatedDate;
-                    _selectedBooking.TotalAmount = totalAmount;
                     _selectedBooking.Status = cmbStatus.Text;
                     _selectedBooking.Notes = txtNotes.Text.Trim();
+                    // TotalAmount neaktualizujeme, dìlá to DB
                 }
 
                 _context.SaveChanges();
@@ -139,26 +110,34 @@ namespace AquaParkManager.Windows
             }
             catch (Exception ex)
             {
-                // Výpis detailní chyby (èasto Oracle chyb)
-                var msg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                MessageBox.Show($"Error saving booking: {msg}");
+                MessageBox.Show($"Error saving booking: {ex.Message}");
             }
         }
 
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedBooking == null) return;
-            try
+            if (_selectedBooking != null)
             {
                 _context.Bookings.Remove(_selectedBooking);
                 _context.SaveChanges();
                 LoadBookings();
                 ClearForm();
             }
-            catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
 
         private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); _selectedBooking = null; }
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var searchText = txtSearch.Text.ToLower();
+            if (string.IsNullOrEmpty(searchText)) { LoadBookings(); return; }
+            try
+            {
+                dgBookings.ItemsSource = _context.Bookings.Include(b => b.Visitor)
+                    .Where(b => (b.BookingRef != null && b.BookingRef.ToLower().Contains(searchText)))
+                    .ToList();
+            }
+            catch { }
+        }
 
         private void ClearForm()
         {

@@ -24,7 +24,6 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // Naèteme návštìvníky VÈETNÌ Adresy a PSÈ
                 var visitors = _context.Visitors
                     .Include(v => v.Address)
                     .ThenInclude(a => a.PostalCode)
@@ -34,7 +33,7 @@ namespace AquaParkManager.Windows
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading visitors: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading visitors: {ex.Message}");
             }
         }
 
@@ -42,16 +41,13 @@ namespace AquaParkManager.Windows
         {
             var searchText = txtSearch.Text.ToLower();
             if (string.IsNullOrEmpty(searchText)) { LoadVisitors(); return; }
-
             try
             {
                 var filteredVisitors = _context.Visitors
                     .Include(v => v.Address).ThenInclude(a => a.PostalCode)
                     .Where(v => (v.FirstName != null && v.FirstName.ToLower().Contains(searchText)) ||
-                               (v.LastName != null && v.LastName.ToLower().Contains(searchText)) ||
-                               (v.Email != null && v.Email.ToLower().Contains(searchText)))
+                               (v.LastName != null && v.LastName.ToLower().Contains(searchText)))
                     .ToList();
-
                 dgVisitors.ItemsSource = filteredVisitors;
             }
             catch { }
@@ -73,10 +69,8 @@ namespace AquaParkManager.Windows
             dpDateOfBirth.SelectedDate = visitor.DateOfBirth;
             txtEmail.Text = visitor.Email ?? "";
             txtPhone.Text = visitor.Phone ?? "";
-            txtEmergencyContact.Text = visitor.EmergencyContact ?? "";
             txtNotes.Text = visitor.Notes ?? "";
 
-            // --- Naètení Adresy ---
             if (visitor.Address != null)
             {
                 txtStreet.Text = visitor.Address.Street ?? "";
@@ -107,14 +101,12 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // Validace
                 if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(txtLastName.Text))
                 {
                     MessageBox.Show("First Name and Last Name are required.");
                     return;
                 }
 
-                // Validace adresy (povinné v DB)
                 if (string.IsNullOrWhiteSpace(txtHouseNumber.Text) || string.IsNullOrWhiteSpace(txtCity.Text) ||
                     string.IsNullOrWhiteSpace(txtZip.Text))
                 {
@@ -122,7 +114,6 @@ namespace AquaParkManager.Windows
                     return;
                 }
 
-                // Získání nebo vytvoøení adresy
                 int addressId = GetOrCreateAddress(
                     txtStreet.Text.Trim(),
                     txtHouseNumber.Text.Trim(),
@@ -134,7 +125,6 @@ namespace AquaParkManager.Windows
 
                 if (_selectedVisitor == null)
                 {
-                    // INSERT
                     var newVisitor = new Visitor
                     {
                         FirstName = txtFirstName.Text.Trim(),
@@ -142,44 +132,35 @@ namespace AquaParkManager.Windows
                         DateOfBirth = dpDateOfBirth.SelectedDate,
                         Email = txtEmail.Text.Trim(),
                         Phone = txtPhone.Text.Trim(),
-                        EmergencyContact = txtEmergencyContact.Text.Trim(),
                         Notes = txtNotes.Text.Trim(),
-                        AddressId = addressId // Pøiøazení ID adresy
+                        AddressId = addressId
                     };
-
                     _context.Visitors.Add(newVisitor);
-                    lblStatus.Text = "Visitor added successfully";
                 }
                 else
                 {
-                    // UPDATE
                     _selectedVisitor.FirstName = txtFirstName.Text.Trim();
                     _selectedVisitor.LastName = txtLastName.Text.Trim();
                     _selectedVisitor.DateOfBirth = dpDateOfBirth.SelectedDate;
                     _selectedVisitor.Email = txtEmail.Text.Trim();
                     _selectedVisitor.Phone = txtPhone.Text.Trim();
-                    _selectedVisitor.EmergencyContact = txtEmergencyContact.Text.Trim();
                     _selectedVisitor.Notes = txtNotes.Text.Trim();
-                    _selectedVisitor.AddressId = addressId; // Aktualizace adresy
-
-                    lblStatus.Text = "Visitor updated successfully";
+                    _selectedVisitor.AddressId = addressId;
                 }
 
                 _context.SaveChanges();
                 LoadVisitors();
                 ClearForm();
+                lblStatus.Text = "Visitor saved successfully";
             }
             catch (Exception ex)
             {
-                var inner = ex.InnerException != null ? ex.InnerException.Message : "";
-                MessageBox.Show($"Error saving visitor: {ex.Message}\nDetails: {inner}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error saving visitor: {ex.Message}");
             }
         }
 
-        // Pomocná metoda pro øešení adresy (stejná jako u Staff)
         private int GetOrCreateAddress(string street, string houseNum, string city, string zip, string region, string country)
         {
-            // Oracle nepodporuje prázdné øetìzce v NOT NULL sloupcích (Region, Country)
             if (string.IsNullOrEmpty(region)) region = "Nezadáno";
             if (string.IsNullOrEmpty(country)) country = "Nezadáno";
 
@@ -220,20 +201,16 @@ namespace AquaParkManager.Windows
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedVisitor == null) return;
-
-            if (MessageBox.Show($"Delete {_selectedVisitor.FirstName}?", "Confirm", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            try
             {
-                try
-                {
-                    _context.Visitors.Remove(_selectedVisitor);
-                    _context.SaveChanges();
-                    LoadVisitors();
-                    ClearForm();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error: {ex.Message}");
-                }
+                _context.Visitors.Remove(_selectedVisitor);
+                _context.SaveChanges();
+                LoadVisitors();
+                ClearForm();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}");
             }
         }
 
@@ -246,11 +223,9 @@ namespace AquaParkManager.Windows
             dpDateOfBirth.SelectedDate = null;
             txtEmail.Text = "";
             txtPhone.Text = "";
-            txtEmergencyContact.Text = "";
             txtNotes.Text = "";
             ClearAddressFields();
             _selectedVisitor = null;
-            dgVisitors.SelectedItem = null;
         }
 
         private void ClearAddressFields()
