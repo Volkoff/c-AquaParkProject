@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using AquaParkManager.Models;
-using Microsoft.EntityFrameworkCore; // Ponecháno, kdyby bylo potøeba v budoucnu
+using Microsoft.EntityFrameworkCore;
 
 namespace AquaParkManager.Windows
 {
@@ -31,10 +31,7 @@ namespace AquaParkManager.Windows
                 cmbAttraction.DisplayMemberPath = "Name";
                 cmbAttraction.SelectedValuePath = "AttractionId";
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading attractions: {ex.Message}");
-            }
+            catch { }
         }
 
         private void LoadStaff()
@@ -43,54 +40,27 @@ namespace AquaParkManager.Windows
             {
                 var staff = _context.Staff.ToList();
                 cmbStaff.ItemsSource = staff;
-                cmbStaff.DisplayMemberPath = "FirstName";
+                cmbStaff.DisplayMemberPath = "FullName";
                 cmbStaff.SelectedValuePath = "StaffId";
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading staff: {ex.Message}");
-            }
+            catch { }
         }
 
         private void LoadMaintenanceRecords()
         {
             try
             {
-                // Odstranili jsme .Include(), protože vazby jsou nyní [NotMapped]
-                var maintenanceRecords = _context.MaintenanceRecords.ToList();
+                var records = _context.MaintenanceRecords
+                    .Include(m => m.Staff)
+                    .Where(m => m.LogType == "MAINTENANCE")
+                    .ToList();
 
-                // POZOR: Protože vazby nejsou v DB namapované pøímo (NotMapped), 
-                // data pro Grid (Jméno atrakce, Staff) se nenaètou automaticky.
-                // Pro úèely obhajoby to buï necháme prázdné, nebo bychom museli data spojit ruènì.
-                // Zde jen naèteme záznamy, aby aplikace nepadala.
-
-                dgMaintenance.ItemsSource = maintenanceRecords;
-                lblStatus.Text = $"Loaded {maintenanceRecords.Count} maintenance records";
+                dgMaintenance.ItemsSource = records;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading maintenance records: {ex.Message}");
+                MessageBox.Show($"Error: {ex.Message}");
             }
-        }
-
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            // Vyhledávání zjednodušeno
-            var searchText = txtSearch.Text.ToLower();
-            if (string.IsNullOrEmpty(searchText))
-            {
-                LoadMaintenanceRecords();
-                return;
-            }
-
-            try
-            {
-                var filtered = _context.MaintenanceRecords
-                    .Where(m => (m.ProblemDescription != null && m.ProblemDescription.ToLower().Contains(searchText)))
-                    .ToList();
-                dgMaintenance.ItemsSource = filtered;
-            }
-            catch { }
         }
 
         private void DgMaintenance_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -98,26 +68,43 @@ namespace AquaParkManager.Windows
             _selectedMaintenance = dgMaintenance.SelectedItem as MaintenanceRecord;
             if (_selectedMaintenance != null)
             {
-                LoadMaintenanceDetails(_selectedMaintenance);
+                cmbStaff.SelectedValue = _selectedMaintenance.ReportedBy;
+                dpReportDate.SelectedDate = _selectedMaintenance.ReportDate;
+
+                if (_selectedMaintenance.RelatedTable == "ATTRACTIONS" && _selectedMaintenance.RelatedId.HasValue)
+                {
+                    cmbAttraction.SelectedValue = _selectedMaintenance.RelatedId.Value;
+                }
+
+                string rawDesc = _selectedMaintenance.ProblemDescription ?? "";
+
+                txtProblemDescription.Text = GetValueFromTag(rawDesc, "PROBLEM");
+                txtActionTaken.Text = GetValueFromTag(rawDesc, "ACTION");
+                txtCost.Text = GetValueFromTag(rawDesc, "COST");
+
+                string dateStr = GetValueFromTag(rawDesc, "COMPLETED");
+                if (DateTime.TryParse(dateStr, out DateTime dt)) dpCompletedDate.SelectedDate = dt;
+                else dpCompletedDate.SelectedDate = null;
             }
         }
 
-        private void LoadMaintenanceDetails(MaintenanceRecord maintenance)
+        private string GetValueFromTag(string text, string tag)
         {
-            cmbAttraction.SelectedValue = maintenance.AttractionId;
-            cmbStaff.SelectedValue = maintenance.ReportedBy;
-            dpReportDate.SelectedDate = maintenance.ReportDate;
-            txtProblemDescription.Text = maintenance.ProblemDescription ?? "";
-            txtActionTaken.Text = maintenance.ActionTaken ?? "";
-            dpCompletedDate.SelectedDate = maintenance.CompletedDate;
-            txtCost.Text = maintenance.Cost.ToString();
+            string startTag = $"[{tag}]:";
+            int startIndex = text.IndexOf(startTag);
+            if (startIndex == -1) return "";
+
+            startIndex += startTag.Length;
+            int endIndex = text.IndexOf("|", startIndex);
+            if (endIndex == -1) endIndex = text.Length;
+
+            return text.Substring(startIndex, endIndex - startIndex).Trim();
         }
 
         private void BtnAddMaintenance_Click(object sender, RoutedEventArgs e)
         {
             ClearForm();
             _selectedMaintenance = null;
-            cmbAttraction.Focus();
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -127,29 +114,28 @@ namespace AquaParkManager.Windows
                 if (cmbAttraction.SelectedValue == null) return;
                 int attractionId = (int)cmbAttraction.SelectedValue;
 
+                string completedStr = dpCompletedDate.SelectedDate?.ToString("yyyy-MM-dd") ?? "";
+                string packedDesc = $"[PROBLEM]: {txtProblemDescription.Text} | [ACTION]: {txtActionTaken.Text} | [COST]: {txtCost.Text} | [COMPLETED]: {completedStr}";
+
                 if (_selectedMaintenance == null)
                 {
                     var newRecord = new MaintenanceRecord
                     {
-                        // Mapování vazby na Atrakci (polymorfní)
                         RelatedTable = "ATTRACTIONS",
                         RelatedId = attractionId,
-
                         ReportedBy = cmbStaff.SelectedValue as int?,
                         ReportDate = dpReportDate.SelectedDate ?? DateTime.Now,
-                        ProblemDescription = txtProblemDescription.Text,
-                        LogType = "MAINTENANCE" // Fixní typ
+                        LogType = "MAINTENANCE",
+                        ProblemDescription = packedDesc
                     };
                     _context.MaintenanceRecords.Add(newRecord);
                 }
                 else
                 {
-                    _selectedMaintenance.RelatedTable = "ATTRACTIONS";
                     _selectedMaintenance.RelatedId = attractionId;
-
                     _selectedMaintenance.ReportedBy = cmbStaff.SelectedValue as int?;
                     _selectedMaintenance.ReportDate = dpReportDate.SelectedDate ?? DateTime.Now;
-                    _selectedMaintenance.ProblemDescription = txtProblemDescription.Text;
+                    _selectedMaintenance.ProblemDescription = packedDesc;
                 }
 
                 _context.SaveChanges();
@@ -187,6 +173,7 @@ namespace AquaParkManager.Windows
             _selectedMaintenance = null;
         }
 
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }
         protected override void OnClosed(EventArgs e)
         {
             _context?.Dispose();

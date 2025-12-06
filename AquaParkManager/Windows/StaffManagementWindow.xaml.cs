@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using AquaParkManager.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AquaParkManager.Windows
 {
@@ -11,8 +12,6 @@ namespace AquaParkManager.Windows
     {
         private AquaParkContext _context;
         private Staff? _selectedStaff;
-
-        // OPRAVA 1: Inicializace seznamu, aby nebyl null (øeší varování "Promìnná pole _roleSelections...")
         private List<RoleSelection> _roleSelections = new List<RoleSelection>();
 
         public StaffManagementWindow()
@@ -20,7 +19,7 @@ namespace AquaParkManager.Windows
             InitializeComponent();
             _context = new AquaParkContext();
 
-            LoadRoles(); // Nejdøív naèteme definice rolí
+            LoadRoles();
             LoadStaff();
             ClearForm();
         }
@@ -29,7 +28,6 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // Naèteme všechny role z DB a pøevedeme je na naši pomocnou tøídu
                 var roles = _context.Roles.ToList();
                 _roleSelections = roles.Select(r => new RoleSelection
                 {
@@ -50,13 +48,18 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                var staff = _context.Staff.ToList();
+                // Musíme naèíst i Adresu a její PSÈ (Include)
+                var staff = _context.Staff
+                    .Include(s => s.Address)
+                    .ThenInclude(a => a.PostalCode)
+                    .ToList();
+
                 dgStaff.ItemsSource = staff;
-                lblStatus.Text = $"Loaded {staff.Count} staff members";
+                lblStatus.Text = $"Naèteno {staff.Count} zamìstnancù";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading staff: {ex.Message}");
+                MessageBox.Show($"Chyba pøi naèítání zamìstnancù: {ex.Message}\nInner: {ex.InnerException?.Message}");
             }
         }
 
@@ -67,23 +70,41 @@ namespace AquaParkManager.Windows
             txtEmail.Text = staff.Email ?? "";
             txtPhone.Text = staff.Phone ?? "";
 
+            // --- Naètení Adresy ---
+            if (staff.Address != null)
+            {
+                txtStreet.Text = staff.Address.Street ?? "";
+                txtHouseNumber.Text = staff.Address.HouseNumber;
+
+                if (staff.Address.PostalCode != null)
+                {
+                    txtZip.Text = staff.Address.PostalCode.Code;
+                    txtCity.Text = staff.Address.PostalCode.City;
+                    txtRegion.Text = staff.Address.PostalCode.Region;
+                    txtCountry.Text = staff.Address.PostalCode.Country;
+                }
+            }
+            else
+            {
+                // Vymazat pole adresy, pokud zamìstnanec adresu nemá (nemìlo by nastat díky NOT NULL)
+                ClearAddressFields();
+            }
+            // ----------------------
+
             dpHireDate.SelectedDate = staff.HireDate;
             chkActive.IsChecked = staff.Active == "Y";
             txtNotes.Text = staff.Notes ?? "";
 
-            // 1. Zjistíme ID rolí, které tento zamìstnanec má v tabulce STAFF_ROLES
+            // Nastavení rolí
             var assignedRoleIds = _context.StaffRoles
                                     .Where(sr => sr.StaffId == staff.StaffId)
                                     .Select(sr => sr.RoleId)
                                     .ToList();
 
-            // 2. Projdeme náš seznam pro ListBox a zaškrtneme ty správné
             foreach (var roleItem in _roleSelections)
             {
                 roleItem.IsSelected = assignedRoleIds.Contains(roleItem.RoleId);
             }
-
-            // 3. Obnovíme zobrazení ListBoxu
             lstRoles.Items.Refresh();
         }
 
@@ -91,69 +112,77 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // Validace jména
+                // 1. Validace základních údajù
                 if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(txtLastName.Text))
                 {
                     MessageBox.Show("Jméno a pøíjmení jsou povinné.", "Chyba", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // Získáme všechny role, které uživatel zaškrtnul
-                var selectedRoles = _roleSelections.Where(r => r.IsSelected).ToList();
-                if (!selectedRoles.Any())
+                // 2. Validace adresy (DB vyžaduje HouseNumber, City, Zip, Region, Country)
+                if (string.IsNullOrWhiteSpace(txtHouseNumber.Text) || string.IsNullOrWhiteSpace(txtCity.Text) ||
+                    string.IsNullOrWhiteSpace(txtZip.Text))
                 {
-                    MessageBox.Show("Zamìstnanec musí mít alespoò jednu roli.", "Chyba", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Vyplòte prosím adresu (Èíslo popisné, Mìsto, PSÈ).", "Chyba adresy", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // Vytvoøíme textový øetìzec rolí (napø. "Plavèík, Manažer") pro sloupeèek JobTitle
-                string jobTitleString = string.Join(", ", selectedRoles.Select(r => r.RoleName));
+                // 3. Zpracování ADRESY a PSÈ
+                int addressId = GetOrCreateAddress(
+                    txtStreet.Text.Trim(),
+                    txtHouseNumber.Text.Trim(),
+                    txtCity.Text.Trim(),
+                    txtZip.Text.Trim(),
+                    txtRegion.Text.Trim(),
+                    txtCountry.Text.Trim()
+                );
 
-                // Oprava chybìjící adresy (aby nepadala aplikace na Foreign Key)
-                var defaultAddress = _context.Address.FirstOrDefault();
-                int defaultAddressId = defaultAddress?.AddressId ?? 1;
+                // 4. Pøíprava rolí (JobTitle string)
+                var selectedRoles = _roleSelections.Where(r => r.IsSelected).ToList();
+                string jobTitleString = selectedRoles.Any() ? string.Join(", ", selectedRoles.Select(r => r.RoleName)) : "Zamìstnanec";
 
                 int staffId = 0;
 
                 if (_selectedStaff == null)
                 {
-                    // --- NOVÝ ZAMÌSTNANEC ---
+                    // --- INSERT ---
                     var newStaff = new Staff
                     {
                         FirstName = txtFirstName.Text.Trim(),
                         LastName = txtLastName.Text.Trim(),
                         Email = txtEmail.Text.Trim(),
                         Phone = txtPhone.Text.Trim(),
-                        JobTitle = jobTitleString, // Uložíme textový seznam rolí
+                        JobTitle = jobTitleString,
                         HireDate = dpHireDate.SelectedDate ?? DateTime.Now,
                         Active = chkActive.IsChecked == true ? "Y" : "N",
                         Notes = txtNotes.Text.Trim(),
-                        AddressId = defaultAddressId // Povinné pole
+                        AddressId = addressId // Zde použijeme získané ID
                     };
 
                     _context.Staff.Add(newStaff);
-                    _context.SaveChanges(); // Uložíme hned, abychom získali StaffId
+                    _context.SaveChanges();
                     staffId = newStaff.StaffId;
                     lblStatus.Text = "Zamìstnanec pøidán.";
                 }
                 else
                 {
-                    // --- UPDATE ZAMÌSTNANCE ---
+                    // --- UPDATE ---
                     _selectedStaff.FirstName = txtFirstName.Text.Trim();
                     _selectedStaff.LastName = txtLastName.Text.Trim();
                     _selectedStaff.Email = txtEmail.Text.Trim();
                     _selectedStaff.Phone = txtPhone.Text.Trim();
-                    _selectedStaff.JobTitle = jobTitleString; // Aktualizujeme text
+                    _selectedStaff.JobTitle = jobTitleString;
                     _selectedStaff.HireDate = dpHireDate.SelectedDate ?? _selectedStaff.HireDate;
                     _selectedStaff.Active = chkActive.IsChecked == true ? "Y" : "N";
                     _selectedStaff.Notes = txtNotes.Text.Trim();
+                    _selectedStaff.AddressId = addressId; // Aktualizace adresy
 
                     _context.SaveChanges();
                     staffId = _selectedStaff.StaffId;
                     lblStatus.Text = "Zamìstnanec aktualizován.";
                 }
 
-                // --- KLÍÈOVÁ ÈÁST: Aktualizace tabulky STAFF_ROLES ---
+                // 5. Aktualizace vazební tabulky rolí
                 UpdateStaffRolesInDatabase(staffId, selectedRoles);
 
                 LoadStaff();
@@ -166,36 +195,63 @@ namespace AquaParkManager.Windows
             }
         }
 
-        // Metoda, která inteligentnì srovná tabulku STAFF_ROLES
-        private void UpdateStaffRolesInDatabase(int staffId, List<RoleSelection> selectedRoles)
+        // --- POMOCNÁ METODA PRO ADRESY ---
+        private int GetOrCreateAddress(string street, string houseNum, string city, string zip, string region, string country)
         {
-            // 1. Naèteme aktuální vazby z databáze
-            var currentRelations = _context.StaffRoles.Where(sr => sr.StaffId == staffId).ToList();
+            // A. Najdeme nebo vytvoøíme PSÈ
+            var postalCode = _context.PostalCodes
+                .FirstOrDefault(p => p.Code == zip && p.City == city);
 
-            // 2. Získáme seznam ID, která chceme mít
-            // OPRAVA 2: Tím, že je tøída RoleSelection definována, kompilátor už ví, co je 'RoleId', a typy budou sedìt.
-            var desiredRoleIds = selectedRoles.Select(r => r.RoleId).ToList();
-
-            // 3. Najdeme ty, co musíme SMAZAT (jsou v DB, ale už nejsou zaškrtnuté)
-            var toDelete = currentRelations.Where(sr => !desiredRoleIds.Contains(sr.RoleId)).ToList();
-            if (toDelete.Any())
+            if (postalCode == null)
             {
-                _context.StaffRoles.RemoveRange(toDelete);
+                postalCode = new PostalCode
+                {
+                    Code = zip,
+                    City = city,
+                    Region = string.IsNullOrEmpty(region) ? "Nezadáno" : region,
+                    Country = string.IsNullOrEmpty(country) ? "Nezadáno" : country
+                };
+                _context.PostalCodes.Add(postalCode);
+                _context.SaveChanges(); // Musíme uložit, abychom mìli PostalCodeId
             }
 
-            // 4. Najdeme ty, co musíme PØIDAT (jsou zaškrtnuté, ale nejsou v DB)
+            // B. Najdeme nebo vytvoøíme ADRESU
+            // Zjednodušená kontrola: hledáme shodu v ulici, èísle a ID psè
+            var address = _context.Address
+                .FirstOrDefault(a => a.Street == street && a.HouseNumber == houseNum && a.PostalCodeId == postalCode.PostalCodeId);
+
+            if (address == null)
+            {
+                address = new Address
+                {
+                    Street = street,
+                    HouseNumber = houseNum,
+                    PostalCodeId = postalCode.PostalCodeId
+                };
+                _context.Address.Add(address);
+                _context.SaveChanges();
+            }
+
+            return address.AddressId;
+        }
+
+        private void UpdateStaffRolesInDatabase(int staffId, List<RoleSelection> selectedRoles)
+        {
+            var currentRelations = _context.StaffRoles.Where(sr => sr.StaffId == staffId).ToList();
+            var desiredRoleIds = selectedRoles.Select(r => r.RoleId).ToList();
+
+            // Smazat nechtìné
+            var toDelete = currentRelations.Where(sr => !desiredRoleIds.Contains(sr.RoleId)).ToList();
+            if (toDelete.Any()) _context.StaffRoles.RemoveRange(toDelete);
+
+            // Pøidat nové
             var existingRoleIds = currentRelations.Select(sr => sr.RoleId).ToList();
             var toAddIds = desiredRoleIds.Except(existingRoleIds).ToList();
 
             foreach (var roleId in toAddIds)
             {
-                _context.StaffRoles.Add(new StaffRole
-                {
-                    StaffId = staffId,
-                    RoleId = roleId
-                });
+                _context.StaffRoles.Add(new StaffRole { StaffId = staffId, RoleId = roleId });
             }
-
             _context.SaveChanges();
         }
 
@@ -205,7 +261,9 @@ namespace AquaParkManager.Windows
             txtLastName.Text = "";
             txtEmail.Text = "";
             txtPhone.Text = "";
-            // Resetujeme CheckBoxy
+
+            ClearAddressFields();
+
             foreach (var item in _roleSelections) item.IsSelected = false;
             lstRoles.Items.Refresh();
 
@@ -215,58 +273,45 @@ namespace AquaParkManager.Windows
             _selectedStaff = null;
         }
 
+        private void ClearAddressFields()
+        {
+            txtStreet.Text = "";
+            txtHouseNumber.Text = "";
+            txtCity.Text = "";
+            txtZip.Text = "";
+            txtRegion.Text = "Pardubický kraj";
+            txtCountry.Text = "Èeská republika";
+        }
+
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Pro zjednodušení vyhledávání (Search logic) znovu naèteme vše a filtrujeme v pamìti
+            // nebo udìláme dotaz. Zde jen reload:
             var searchText = txtSearch.Text.ToLower();
-            if (string.IsNullOrEmpty(searchText))
-            {
-                LoadStaff();
-                return;
-            }
+            if (string.IsNullOrEmpty(searchText)) { LoadStaff(); return; }
+
             try
             {
-                var filteredStaff = _context.Staff
-                    .Where(s => s.FirstName.ToLower().Contains(searchText) ||
-                               s.LastName.ToLower().Contains(searchText) ||
-                               s.Email.ToLower().Contains(searchText) ||
-                               s.JobTitle.ToLower().Contains(searchText))
-                    .ToList();
-
-                dgStaff.ItemsSource = filteredStaff;
+                var staff = _context.Staff
+                     .Include(s => s.Address).ThenInclude(a => a.PostalCode)
+                     .Where(s => s.FirstName.ToLower().Contains(searchText) || s.LastName.ToLower().Contains(searchText))
+                     .ToList();
+                dgStaff.ItemsSource = staff;
             }
             catch { }
         }
 
-        private void BtnAddStaff_Click(object sender, RoutedEventArgs e)
-        {
-            ClearForm();
-            _selectedStaff = null;
-            txtFirstName.Focus();
-        }
-
+        private void BtnAddStaff_Click(object sender, RoutedEventArgs e) { ClearForm(); _selectedStaff = null; txtFirstName.Focus(); }
         private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); }
-
         private void DgStaff_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedStaff = dgStaff.SelectedItem as Staff;
             if (_selectedStaff != null) LoadStaffDetails(_selectedStaff);
         }
-
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedStaff == null)
-            {
-                MessageBox.Show("Please select a staff member to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            var result = MessageBox.Show(
-                $"Are you sure you want to delete {_selectedStaff.FirstName} {_selectedStaff.LastName}?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
+            if (_selectedStaff == null) return;
+            if (MessageBox.Show("Opravdu smazat?", "Smazat", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 try
                 {
@@ -274,23 +319,13 @@ namespace AquaParkManager.Windows
                     _context.SaveChanges();
                     LoadStaff();
                     ClearForm();
-                    lblStatus.Text = "Staff member deleted successfully";
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error deleting staff: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                catch (Exception ex) { MessageBox.Show("Chyba pøi mazání: " + ex.Message); }
             }
         }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _context?.Dispose();
-            base.OnClosed(e);
-        }
+        protected override void OnClosed(EventArgs e) { _context?.Dispose(); base.OnClosed(e); }
     }
 
-    // OPRAVA 3: Tøída RoleSelection je nyní SPRÁVNÌ definovaná zde
     public class RoleSelection
     {
         public int RoleId { get; set; }

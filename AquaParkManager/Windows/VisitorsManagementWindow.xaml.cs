@@ -1,9 +1,9 @@
-using AquaParkManager.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using AquaParkManager.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AquaParkManager.Windows
 {
@@ -24,42 +24,37 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                var visitors = _context.Visitors.ToList();
+                // Naèteme návštìvníky VÈETNÌ Adresy a PSÈ
+                var visitors = _context.Visitors
+                    .Include(v => v.Address)
+                    .ThenInclude(a => a.PostalCode)
+                    .ToList();
                 dgVisitors.ItemsSource = visitors;
                 lblStatus.Text = $"Loaded {visitors.Count} visitors";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading visitors: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error loading visitors";
             }
         }
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             var searchText = txtSearch.Text.ToLower();
-            if (string.IsNullOrEmpty(searchText))
-            {
-                LoadVisitors();
-                return;
-            }
+            if (string.IsNullOrEmpty(searchText)) { LoadVisitors(); return; }
 
             try
             {
                 var filteredVisitors = _context.Visitors
+                    .Include(v => v.Address).ThenInclude(a => a.PostalCode)
                     .Where(v => (v.FirstName != null && v.FirstName.ToLower().Contains(searchText)) ||
                                (v.LastName != null && v.LastName.ToLower().Contains(searchText)) ||
-                               (v.Email != null && v.Email.ToLower().Contains(searchText)) ||
-                               (v.Phone != null && v.Phone.ToLower().Contains(searchText)))
+                               (v.Email != null && v.Email.ToLower().Contains(searchText)))
                     .ToList();
-                
+
                 dgVisitors.ItemsSource = filteredVisitors;
-                lblStatus.Text = $"Found {filteredVisitors.Count} visitors";
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error searching visitors: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch { }
         }
 
         private void DgVisitors_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -80,6 +75,25 @@ namespace AquaParkManager.Windows
             txtPhone.Text = visitor.Phone ?? "";
             txtEmergencyContact.Text = visitor.EmergencyContact ?? "";
             txtNotes.Text = visitor.Notes ?? "";
+
+            // --- Naètení Adresy ---
+            if (visitor.Address != null)
+            {
+                txtStreet.Text = visitor.Address.Street ?? "";
+                txtHouseNumber.Text = visitor.Address.HouseNumber;
+
+                if (visitor.Address.PostalCode != null)
+                {
+                    txtZip.Text = visitor.Address.PostalCode.Code;
+                    txtCity.Text = visitor.Address.PostalCode.City;
+                    txtRegion.Text = visitor.Address.PostalCode.Region;
+                    txtCountry.Text = visitor.Address.PostalCode.Country;
+                }
+            }
+            else
+            {
+                ClearAddressFields();
+            }
         }
 
         private void BtnAddVisitor_Click(object sender, RoutedEventArgs e)
@@ -93,65 +107,121 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                var defaultAddress = _context.Address.FirstOrDefault();
-                int addressId = defaultAddress?.AddressId ?? 1; 
+                // Validace
+                if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(txtLastName.Text))
+                {
+                    MessageBox.Show("First Name and Last Name are required.");
+                    return;
+                }
+
+                // Validace adresy (povinné v DB)
+                if (string.IsNullOrWhiteSpace(txtHouseNumber.Text) || string.IsNullOrWhiteSpace(txtCity.Text) ||
+                    string.IsNullOrWhiteSpace(txtZip.Text))
+                {
+                    MessageBox.Show("Address (House No., City, Zip) is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Získání nebo vytvoøení adresy
+                int addressId = GetOrCreateAddress(
+                    txtStreet.Text.Trim(),
+                    txtHouseNumber.Text.Trim(),
+                    txtCity.Text.Trim(),
+                    txtZip.Text.Trim(),
+                    txtRegion.Text.Trim(),
+                    txtCountry.Text.Trim()
+                );
 
                 if (_selectedVisitor == null)
                 {
+                    // INSERT
+                    var newVisitor = new Visitor
+                    {
+                        FirstName = txtFirstName.Text.Trim(),
+                        LastName = txtLastName.Text.Trim(),
+                        DateOfBirth = dpDateOfBirth.SelectedDate,
+                        Email = txtEmail.Text.Trim(),
+                        Phone = txtPhone.Text.Trim(),
+                        EmergencyContact = txtEmergencyContact.Text.Trim(),
+                        Notes = txtNotes.Text.Trim(),
+                        AddressId = addressId // Pøiøazení ID adresy
+                    };
 
-
-                    string sql = "BEGIN SP_REGISTER_VISITOR(:p0, :p1, :p2, :p3, :p4); END;";
-
-                    _context.Database.ExecuteSqlRaw(sql,
-                        txtFirstName.Text.Trim(),      
-                        txtLastName.Text.Trim(),       
-                        txtEmail.Text.Trim(),          
-                        addressId,                      
-                        dpDateOfBirth.SelectedDate ?? DateTime.Now
-                    );
-
-                    lblStatus.Text = "Visitor added via PL/SQL Procedure successfully";
+                    _context.Visitors.Add(newVisitor);
+                    lblStatus.Text = "Visitor added successfully";
                 }
                 else
                 {
+                    // UPDATE
                     _selectedVisitor.FirstName = txtFirstName.Text.Trim();
                     _selectedVisitor.LastName = txtLastName.Text.Trim();
                     _selectedVisitor.DateOfBirth = dpDateOfBirth.SelectedDate;
                     _selectedVisitor.Email = txtEmail.Text.Trim();
                     _selectedVisitor.Phone = txtPhone.Text.Trim();
+                    _selectedVisitor.EmergencyContact = txtEmergencyContact.Text.Trim();
+                    _selectedVisitor.Notes = txtNotes.Text.Trim();
+                    _selectedVisitor.AddressId = addressId; // Aktualizace adresy
 
-                    _context.SaveChanges();
                     lblStatus.Text = "Visitor updated successfully";
                 }
 
+                _context.SaveChanges();
                 LoadVisitors();
                 ClearForm();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving visitor: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                var inner = ex.InnerException != null ? ex.InnerException.Message : "";
+                MessageBox.Show($"Error saving visitor: {ex.Message}\nDetails: {inner}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        // Pomocná metoda pro øešení adresy (stejná jako u Staff)
+        private int GetOrCreateAddress(string street, string houseNum, string city, string zip, string region, string country)
+        {
+            // Oracle nepodporuje prázdné øetìzce v NOT NULL sloupcích (Region, Country)
+            if (string.IsNullOrEmpty(region)) region = "Nezadáno";
+            if (string.IsNullOrEmpty(country)) country = "Nezadáno";
+
+            var postalCode = _context.PostalCodes
+                .FirstOrDefault(p => p.Code == zip && p.City == city);
+
+            if (postalCode == null)
+            {
+                postalCode = new PostalCode
+                {
+                    Code = zip,
+                    City = city,
+                    Region = region,
+                    Country = country
+                };
+                _context.PostalCodes.Add(postalCode);
+                _context.SaveChanges();
+            }
+
+            var address = _context.Address
+                .FirstOrDefault(a => a.Street == street && a.HouseNumber == houseNum && a.PostalCodeId == postalCode.PostalCodeId);
+
+            if (address == null)
+            {
+                address = new Address
+                {
+                    Street = street,
+                    HouseNumber = houseNum,
+                    PostalCodeId = postalCode.PostalCodeId
+                };
+                _context.Address.Add(address);
+                _context.SaveChanges();
+            }
+
+            return address.AddressId;
         }
 
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedVisitor == null)
-            {
-                MessageBox.Show("Please select a visitor to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
+            if (_selectedVisitor == null) return;
 
-            var visitorName = $"{_selectedVisitor.FirstName} {_selectedVisitor.LastName}".Trim();
-            if (string.IsNullOrEmpty(visitorName))
-                visitorName = "this visitor";
-
-            var result = MessageBox.Show(
-                $"Are you sure you want to delete {visitorName}?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
+            if (MessageBox.Show($"Delete {_selectedVisitor.FirstName}?", "Confirm", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 try
                 {
@@ -159,22 +229,15 @@ namespace AquaParkManager.Windows
                     _context.SaveChanges();
                     LoadVisitors();
                     ClearForm();
-                    lblStatus.Text = "Visitor deleted successfully";
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error deleting visitor: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    lblStatus.Text = "Error deleting visitor";
+                    MessageBox.Show($"Error: {ex.Message}");
                 }
             }
         }
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e)
-        {
-            ClearForm();
-            _selectedVisitor = null;
-            dgVisitors.SelectedItem = null;
-        }
+        private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); _selectedVisitor = null; }
 
         private void ClearForm()
         {
@@ -185,6 +248,19 @@ namespace AquaParkManager.Windows
             txtPhone.Text = "";
             txtEmergencyContact.Text = "";
             txtNotes.Text = "";
+            ClearAddressFields();
+            _selectedVisitor = null;
+            dgVisitors.SelectedItem = null;
+        }
+
+        private void ClearAddressFields()
+        {
+            txtStreet.Text = "";
+            txtHouseNumber.Text = "";
+            txtCity.Text = "";
+            txtZip.Text = "";
+            txtRegion.Text = "Pardubický kraj";
+            txtCountry.Text = "Èeská republika";
         }
 
         protected override void OnClosed(EventArgs e)

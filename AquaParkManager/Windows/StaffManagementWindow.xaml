@@ -96,6 +96,37 @@
                         <TextBlock Text="Phone:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtPhone" Margin="0,0,0,10"/>
 
+                        <GroupBox Header="Adresa" Margin="0,10,0,10" Padding="5">
+                            <StackPanel>
+                                <TextBlock Text="Ulice:" FontWeight="Bold"/>
+                                <TextBox x:Name="txtStreet" Margin="0,0,0,5"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                                        <TextBlock Text="Číslo popisné:" FontWeight="Bold"/>
+                                        <TextBox x:Name="txtHouseNumber" Margin="0,0,0,5"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="PSČ:" FontWeight="Bold"/>
+                                        <TextBox x:Name="txtZip" Margin="0,0,0,5"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="Město:" FontWeight="Bold"/>
+                                <TextBox x:Name="txtCity" Margin="0,0,0,5"/>
+
+                                <TextBlock Text="Region (Kraj):" FontWeight="Bold"/>
+                                <TextBox x:Name="txtRegion" Text="Pardubický kraj" Margin="0,0,0,5"/>
+
+                                <TextBlock Text="Země:" FontWeight="Bold"/>
+                                <TextBox x:Name="txtCountry" Text="Česká republika" Margin="0,0,0,5"/>
+                            </StackPanel>
+                        </GroupBox>
+
                         <TextBlock Text="Assigned Roles:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <Border BorderBrush="#FFABADB3" BorderThickness="1" CornerRadius="2" Margin="0,0,0,10">
                             <ListBox x:Name="lstRoles" Height="100" ScrollViewer.VerticalScrollBarVisibility="Auto" BorderThickness="0">

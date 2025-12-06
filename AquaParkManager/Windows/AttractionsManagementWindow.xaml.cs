@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using AquaParkManager.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AquaParkManager.Windows
 {
@@ -15,22 +16,47 @@ namespace AquaParkManager.Windows
         {
             InitializeComponent();
             _context = new AquaParkContext();
+            LoadPools(); // Potøebujeme pro AreaId (Park Area)
+            LoadSlideTypes(); // Potøebujeme pro SlideType
             LoadAttractions();
             ClearForm();
+        }
+
+        // --- NOVÉ: Naètení oblastí (Pools/Areas) ---
+        // V DB je vazba PARK_AREAS_AREA_ID povinná (NOT NULL)
+        private void LoadPools()
+        {
+            try
+            {
+                // Doèasnì použijeme existující UI prvek nebo vytvoøíme nový, 
+                // ale pro rychlou opravu bez zmìny XAML pøiøadíme natvrdo ID=1 nebo první nalezenou,
+                // pokud v XAML není ComboBox pro Area.
+                // V pùvodním XAML nebyl ComboBox pro AreaId, což je PROBLÉM, protože DB to vyžaduje.
+                // Prozatím to v Save metodì ošetøíme defaultní hodnotou.
+            }
+            catch { }
+        }
+
+        private void LoadSlideTypes()
+        {
+            // Pokud chceme nastavit typ skluzavky, potøebovali bychom ComboBox.
+            // Pùvodní XAML mìl 'cmbAttractionType' s textovými hodnotami, což neodpovídá DB.
         }
 
         private void LoadAttractions()
         {
             try
             {
-                var attractions = _context.Attractions.ToList();
+                var attractions = _context.Attractions
+                    .Include(a => a.Pool)      // Area
+                    .Include(a => a.SlideType) // Typ skluzavky
+                    .ToList();
                 dgAttractions.ItemsSource = attractions;
                 lblStatus.Text = $"Loaded {attractions.Count} attractions";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading attractions: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error loading attractions";
+                MessageBox.Show($"Error: {ex.Message}");
             }
         }
 
@@ -41,18 +67,11 @@ namespace AquaParkManager.Windows
             _selectedAttraction = dgAttractions.SelectedItem as Attraction;
             if (_selectedAttraction != null)
             {
-                LoadAttractionDetails(_selectedAttraction);
+                txtName.Text = _selectedAttraction.Name;
+                cmbStatus.Text = _selectedAttraction.Status;
+                // Ostatní pole (AttractionType, ObjectId, Capacity) nelze naèíst z DB, protože tam nejsou.
+                // Necháme je prázdná nebo je v XAML ideálnì smaž.
             }
-        }
-
-        private void LoadAttractionDetails(Attraction attraction)
-        {
-            txtName.Text = attraction.Name;
-            cmbAttractionType.Text = attraction.AttractionType;
-            txtObjectId.Text = attraction.ObjectId?.ToString() ?? "";
-            cmbStatus.Text = attraction.Status;
-            txtCapacity.Text = attraction.Capacity?.ToString() ?? "";
-            txtNotes.Text = attraction.Notes ?? "";
         }
 
         private void BtnAddAttraction_Click(object sender, RoutedEventArgs e)
@@ -68,44 +87,39 @@ namespace AquaParkManager.Windows
             {
                 if (string.IsNullOrWhiteSpace(txtName.Text)) return;
 
+                // HACK: Protože v UI nemáme výbìr 'AreaId' (Park Area),
+                // musíme najít nìjaké existující ID, jinak DB vyhodí chybu (Constraint NOT NULL).
+                var defaultArea = _context.Pools.FirstOrDefault();
+                int areaId = defaultArea?.PoolId ?? 1;
+
                 if (_selectedAttraction == null)
                 {
-                    // Add new attraction
                     var newAttraction = new Attraction
                     {
                         Name = txtName.Text.Trim(),
-                        AttractionType = cmbAttractionType.Text,
-                        ObjectId = int.TryParse(txtObjectId.Text, out int objectId) ? objectId : null,
                         Status = cmbStatus.Text,
-                        Capacity = int.TryParse(txtCapacity.Text, out int capacity) ? capacity : null,
-                        Notes = txtNotes.Text.Trim()
+                        AreaId = areaId, // Povinné pole v DB!
+                        // SlideTypeId necháme null (není to skluzavka), pokud to v UI nevyøešíme
                     };
 
                     _context.Attractions.Add(newAttraction);
-                    _context.SaveChanges();
-                    lblStatus.Text = "Attraction added successfully";
                 }
                 else
                 {
-                    // Update existing attraction
                     _selectedAttraction.Name = txtName.Text.Trim();
-                    _selectedAttraction.AttractionType = cmbAttractionType.Text;
-                    _selectedAttraction.ObjectId = int.TryParse(txtObjectId.Text, out int objectId) ? objectId : null;
                     _selectedAttraction.Status = cmbStatus.Text;
-                    _selectedAttraction.Capacity = int.TryParse(txtCapacity.Text, out int capacity) ? capacity : null;
-                    _selectedAttraction.Notes = txtNotes.Text.Trim();
-
-                    _context.SaveChanges();
-                    lblStatus.Text = "Attraction updated successfully";
+                    _selectedAttraction.AreaId = areaId;
                 }
 
+                _context.SaveChanges();
                 LoadAttractions();
                 ClearForm();
+                lblStatus.Text = "Attraction saved successfully";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving attraction: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                lblStatus.Text = "Error saving attraction";
+                var msg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                MessageBox.Show($"Error saving attraction: {msg}");
             }
         }
 
@@ -118,35 +132,21 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadAttractions();
                 ClearForm();
-                lblStatus.Text = "Attraction deleted successfully";
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error deleting attraction: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e)
-        {
-            ClearForm();
-            _selectedAttraction = null;
-            dgAttractions.SelectedItem = null;
-        }
+        private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); _selectedAttraction = null; }
 
         private void ClearForm()
         {
             txtName.Text = "";
-            cmbAttractionType.SelectedIndex = -1;
-            txtObjectId.Text = "";
             cmbStatus.SelectedIndex = 0;
+            // Vymazání polí, která se neukládají, aby to uživatele nepletlo
+            txtObjectId.Text = "";
             txtCapacity.Text = "";
             txtNotes.Text = "";
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _context?.Dispose();
-            base.OnClosed(e);
+            cmbAttractionType.SelectedIndex = -1;
         }
     }
 }

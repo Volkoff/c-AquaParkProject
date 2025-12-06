@@ -86,7 +86,7 @@
                         <TextBox x:Name="txtBookingRef" Margin="0,0,0,10"/>
                         
                         <TextBlock Text="Customer Name:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtCustomerName" Margin="0,0,0,10"/>
+                        <ComboBox x:Name="cmbVisitor" Margin="0,0,0,10" DisplayMemberPath="FullName" SelectedValuePath="VisitorId"/>
                         
                         <TextBlock Text="Created Date:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <DatePicker x:Name="dpCreatedDate" Margin="0,0,0,10"/>

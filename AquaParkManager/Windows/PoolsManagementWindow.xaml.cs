@@ -37,7 +37,6 @@ namespace AquaParkManager.Windows
         {
             var searchText = txtSearch.Text.ToLower();
             if (string.IsNullOrEmpty(searchText)) { LoadPools(); return; }
-
             try
             {
                 dgPools.ItemsSource = _context.Pools.Where(p => p.Name.ToLower().Contains(searchText)).ToList();
@@ -53,7 +52,33 @@ namespace AquaParkManager.Windows
                 txtName.Text = _selectedPool.Name;
                 txtCapacity.Text = _selectedPool.Capacity.ToString();
                 chkIndoors.IsChecked = _selectedPool.Indoors == "Y";
-                // DepthMin/Max nejsou v DB, neøešíme
+
+                txtDepthMin.Text = "";
+                txtDepthMax.Text = "";
+                string notes = _selectedPool.Notes ?? "";
+
+                if (notes.Contains("Hloubka:"))
+                {
+                    try
+                    {
+                        var parts = notes.Split('|');
+                        var depthPart = parts[0].Replace("Hloubka:", "").Replace("m", "").Trim();
+                        var depthValues = depthPart.Split('-');
+
+                        if (depthValues.Length > 0) txtDepthMin.Text = depthValues[0].Trim();
+                        if (depthValues.Length > 1) txtDepthMax.Text = depthValues[1].Trim();
+
+                        if (parts.Length > 1)
+                            txtNotes.Text = parts[1].Replace("Pozn:", "").Trim();
+                        else
+                            txtNotes.Text = "";
+                    }
+                    catch { txtNotes.Text = notes; }
+                }
+                else
+                {
+                    txtNotes.Text = notes;
+                }
             }
         }
 
@@ -71,13 +96,17 @@ namespace AquaParkManager.Windows
                 if (string.IsNullOrWhiteSpace(txtName.Text)) return;
                 int.TryParse(txtCapacity.Text, out int cap);
 
+                string depthInfo = $"Hloubka: {txtDepthMin.Text}-{txtDepthMax.Text}m";
+                string finalNotes = $"{depthInfo} | Pozn: {txtNotes.Text}";
+
                 if (_selectedPool == null)
                 {
                     var newPool = new Pool
                     {
                         Name = txtName.Text,
                         Capacity = cap,
-                        Indoors = chkIndoors.IsChecked == true ? "Y" : "N"
+                        Indoors = chkIndoors.IsChecked == true ? "Y" : "N",
+                        Notes = finalNotes
                     };
                     _context.Pools.Add(newPool);
                 }
@@ -86,6 +115,7 @@ namespace AquaParkManager.Windows
                     _selectedPool.Name = txtName.Text;
                     _selectedPool.Capacity = cap;
                     _selectedPool.Indoors = chkIndoors.IsChecked == true ? "Y" : "N";
+                    _selectedPool.Notes = finalNotes;
                 }
 
                 _context.SaveChanges();
@@ -115,7 +145,7 @@ namespace AquaParkManager.Windows
         {
             txtName.Text = "";
             txtCapacity.Text = "";
-            txtDepthMin.Text = ""; // Ignorováno, jen pro UI
+            txtDepthMin.Text = "";
             txtDepthMax.Text = "";
             chkIndoors.IsChecked = false;
             txtNotes.Text = "";

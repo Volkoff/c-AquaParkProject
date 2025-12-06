@@ -48,7 +48,6 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // Filtrujeme jen atrakce, které mají typ skluzavky
                 var slides = _context.Attractions
                     .Include(s => s.SlideType)
                     .Include(s => s.Pool)
@@ -63,8 +62,6 @@ namespace AquaParkManager.Windows
             }
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }
-
         private void DgSlides_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedSlide = dgSlides.SelectedItem as Attraction;
@@ -74,6 +71,13 @@ namespace AquaParkManager.Windows
                 cmbSlideType.SelectedValue = _selectedSlide.SlideTypeId;
                 cmbStatus.Text = _selectedSlide.Status;
                 cmbPool.SelectedValue = _selectedSlide.AreaId;
+
+                // Vyèistíme pole, která se neukládají do DB
+                txtLength.Text = "";
+                txtHeight.Text = "";
+                txtMinHeight.Text = "";
+                txtMaxWeight.Text = "";
+                txtNotes.Text = "";
             }
         }
 
@@ -90,7 +94,12 @@ namespace AquaParkManager.Windows
             {
                 if (string.IsNullOrWhiteSpace(txtName.Text)) return;
 
-                int areaId = cmbPool.SelectedValue != null ? (int)cmbPool.SelectedValue : 1;
+                if (cmbPool.SelectedValue == null)
+                {
+                    MessageBox.Show("Select a Pool first.");
+                    return;
+                }
+                int areaId = (int)cmbPool.SelectedValue;
 
                 if (_selectedSlide == null)
                 {
@@ -132,6 +141,7 @@ namespace AquaParkManager.Windows
             }
         }
 
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }
         private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); }
 
         private void ClearForm()
@@ -140,6 +150,11 @@ namespace AquaParkManager.Windows
             cmbSlideType.SelectedIndex = -1;
             cmbStatus.SelectedIndex = 0;
             cmbPool.SelectedIndex = -1;
+            txtLength.Text = "";
+            txtHeight.Text = "";
+            txtMinHeight.Text = "";
+            txtMaxWeight.Text = "";
+            txtNotes.Text = "";
             _selectedSlide = null;
         }
 
