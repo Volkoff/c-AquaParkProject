@@ -92,17 +92,28 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Item" Binding="{Binding Name}" Width="*"/>
                             <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}"/>
+                            <DataGridTextColumn Header="Min" Binding="{Binding MinStock}"/>
+                            <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, StringFormat=C}"/>
                             <DataGridTextColumn Header="Supplier" Binding="{Binding Supplier.Name}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                     <GroupBox Grid.Row="1" Header="Add Stock Item">
                         <StackPanel Orientation="Horizontal" Margin="5">
                             <TextBlock Text="Name:" VerticalAlignment="Center"/>
-                            <TextBox Name="txtInvName" Width="150" Margin="5,0"/>
+                            <TextBox Name="txtInvName" Width="120" Margin="5,0"/>
+
                             <TextBlock Text="Qty:" VerticalAlignment="Center"/>
-                            <TextBox Name="txtInvQty" Width="50" Margin="5,0"/>
+                            <TextBox Name="txtInvQty" Width="40" Margin="5,0"/>
+
+                            <TextBlock Text="Min:" VerticalAlignment="Center"/>
+                            <TextBox Name="txtInvMin" Width="40" Margin="5,0" Text="10"/>
+
+                            <TextBlock Text="Price:" VerticalAlignment="Center"/>
+                            <TextBox Name="txtInvPrice" Width="50" Margin="5,0"/>
+
                             <TextBlock Text="Supplier:" VerticalAlignment="Center"/>
-                            <ComboBox Name="cmbInvSup" Width="150" DisplayMemberPath="Name" SelectedValuePath="SupplierId" Margin="5,0"/>
+                            <ComboBox Name="cmbInvSup" Width="120" DisplayMemberPath="Name" SelectedValuePath="SupplierId" Margin="5,0"/>
+
                             <Button Content="Add" Click="BtnAddInv_Click" Width="80"/>
                         </StackPanel>
                     </GroupBox>

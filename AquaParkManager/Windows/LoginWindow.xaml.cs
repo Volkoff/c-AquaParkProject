@@ -1,6 +1,8 @@
 ﻿using AquaParkManager.Models;
 using System;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Windows;
 
 namespace AquaParkManager.Windows
@@ -11,7 +13,6 @@ namespace AquaParkManager.Windows
         {
             InitializeComponent();
         }
-
 
         private void BtnExit_Click(object sender, RoutedEventArgs e)
         {
@@ -33,16 +34,23 @@ namespace AquaParkManager.Windows
             {
                 using (var context = new AquaParkContext())
                 {
-                    // V reálné aplikaci by zde mělo být hashování hesla (SHA256).
-                    // Pro účely seed dat ('hashed_secret_123') porovnáme přímo.
+                    // Vypočteme hash zadaného hesla
+                    string hashedPassword = ComputeSha256Hash(password);
 
-                    var user = context.Users.FirstOrDefault(u => u.Username == username && u.PasswordHash == password);
+                    // Hledáme uživatele. Pro kompatibilitu s testovacími daty (pokud nejsou zahashovaná)
+                    // kontrolujeme jak hash, tak čistý text (fallback).
+                    var user = context.Users.FirstOrDefault(u => u.Username == username &&
+                               (u.PasswordHash == hashedPassword || u.PasswordHash == password));
 
                     if (user != null)
                     {
-                        // Přihlášení úspěšné
-                        App.CurrentUser = user; // Uložíme si uživatele
+                        if (user.IsActive == "N")
+                        {
+                            lblError.Text = "Account is disabled.";
+                            return;
+                        }
 
+                        App.CurrentUser = user; // Uložíme si uživatele
                         MainWindow main = new MainWindow();
                         main.Show();
                         this.Close();
@@ -56,6 +64,20 @@ namespace AquaParkManager.Windows
             catch (Exception ex)
             {
                 lblError.Text = $"Database Error: {ex.Message}";
+            }
+        }
+
+        private static string ComputeSha256Hash(string rawData)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
             }
         }
     }

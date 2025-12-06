@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using AquaParkManager.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +16,19 @@ namespace AquaParkManager.Windows
         public FacilitiesWindow()
         {
             InitializeComponent();
+            // Registrace eventu pro barvení řádků
+            dgInv.LoadingRow += DgInv_LoadingRow;
             RefreshAll();
+        }
+
+        private void DgInv_LoadingRow(object? sender, DataGridRowEventArgs e)
+        {
+            var item = e.Row.DataContext as InventoryItem;
+            if (item != null && item.Quantity <= item.MinStock)
+            {
+                e.Row.Background = new SolidColorBrush(Color.FromRgb(255, 200, 200)); // Červené zvýraznění
+                e.Row.ToolTip = "Warning: Low Stock Level!";
+            }
         }
 
         private void RefreshAll()
@@ -37,7 +51,7 @@ namespace AquaParkManager.Windows
         }
 
         // Attractions
-        private void DgAttractions_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void DgAttractions_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selAttr = dgAttractions.SelectedItem as Attraction;
             if (_selAttr != null) { txtAttrName.Text = _selAttr.Name; cmbAttrPool.SelectedValue = _selAttr.AreaId; cmbAttrStatus.Text = _selAttr.Status; cmbAttrType.SelectedValue = _selAttr.SlideTypeId; }
@@ -63,12 +77,24 @@ namespace AquaParkManager.Windows
             _ctx.SaveChanges(); RefreshAll(); txtMaintDesc.Text = "";
         }
 
-        // Inventory
+        // Inventory - s novými poli
         private void BtnAddInv_Click(object sender, RoutedEventArgs e)
         {
             int.TryParse(txtInvQty.Text, out int q);
-            _ctx.Inventory.Add(new InventoryItem { Name = txtInvName.Text, Quantity = q, SupplierId = cmbInvSup.SelectedValue as int? });
-            _ctx.SaveChanges(); RefreshAll(); txtInvName.Text = "";
+            int.TryParse(txtInvMin.Text, out int min);
+            decimal.TryParse(txtInvPrice.Text, out decimal price);
+
+            _ctx.Inventory.Add(new InventoryItem
+            {
+                Name = txtInvName.Text,
+                Quantity = q,
+                MinStock = min,
+                UnitPrice = price,
+                SupplierId = cmbInvSup.SelectedValue as int?
+            });
+            _ctx.SaveChanges();
+            RefreshAll();
+            txtInvName.Text = "";
         }
 
         // Concessions
