@@ -95,10 +95,20 @@
                         
                         <TextBlock Text="Phone:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtPhone" Margin="0,0,0,10"/>
-                        
-                        <TextBlock Text="Job Title:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtJobTitle" Margin="0,0,0,10"/>
-                        
+
+                        <TextBlock Text="Assigned Roles:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Border BorderBrush="#FFABADB3" BorderThickness="1" CornerRadius="2" Margin="0,0,0,10">
+                            <ListBox x:Name="lstRoles" Height="100" ScrollViewer.VerticalScrollBarVisibility="Auto" BorderThickness="0">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding RoleName}" 
+                          IsChecked="{Binding IsSelected}" 
+                          Margin="2"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+
                         <TextBlock Text="Hire Date:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <DatePicker x:Name="dpHireDate" Margin="0,0,0,10"/>
                         
