@@ -1,0 +1,78 @@
+<Window x:Class="AquaParkManager.Windows.TicketsManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Tickets (Booking Items)" Height="500" Width="1000" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#FF2E86AB" Padding="15">
+            <StackPanel>
+                <TextBlock Text="🎫 Ticket Items" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Add ticket items to an existing booking" FontSize="12" Foreground="White" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Grid.Column="0" Header="Ticket Items" FontWeight="Bold">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button x:Name="btnAddTicket" Content="➕ Add Ticket Item" Margin="0,0,0,0" Padding="15,5" Background="#FF28A745" Foreground="White" BorderThickness="0" Click="BtnAddTicket_Click"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="dgTickets" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" SelectionChanged="DgTickets_SelectionChanged">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Item ID" Binding="{Binding BookingItemId}" Width="60" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Booking ID" Binding="{Binding BookingId}" Width="80"/>
+                            <DataGridTextColumn Header="Ticket Type" Binding="{Binding TicketType.Name}" Width="150"/>
+                            <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat=C}" Width="80"/>
+                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="50"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Column="2" Header="Item Details" FontWeight="Bold">
+                <ScrollViewer>
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Assign to Booking (ID):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="cmbBooking" Margin="0,0,0,10" DisplayMemberPath="BookingRef" SelectedValuePath="BookingId"/>
+
+                        <TextBlock Text="Ticket Type:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="cmbTicketType" Margin="0,0,0,10"/>
+
+                        <TextBlock Text="Quantity:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtQuantity" Text="1" Margin="0,0,0,10"/>
+
+                        <TextBlock Text="Unit Price:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtPricePaid" Margin="0,0,0,15"/>
+
+                        <Button x:Name="btnSave" Content="💾 Save" Background="#FF007BFF" Foreground="White" BorderThickness="0" Padding="10,5" Margin="0,0,0,5" Click="BtnSave_Click"/>
+                        <Button x:Name="btnDelete" Content="🗑️ Delete" Background="#FFDC3545" Foreground="White" BorderThickness="0" Padding="10,5" Margin="0,0,0,5" Click="BtnDelete_Click"/>
+                        <Button x:Name="btnClear" Content="🔄 Clear" Background="#FF6C757D" Foreground="White" BorderThickness="0" Padding="10,5" Click="BtnClear_Click"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+        </Grid>
+
+        <StatusBar Grid.Row="2" Background="#FFF8F9FA">
+            <StatusBarItem>
+                <TextBlock x:Name="lblStatus" Text="Ready"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

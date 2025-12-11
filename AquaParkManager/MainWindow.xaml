@@ -1,42 +1,119 @@
 ﻿<Window x:Class="AquaParkManager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AquaPark Manager - Main Menu" Height="500" Width="800" WindowStartupLocation="CenterScreen">
-    <Grid Margin="20">
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AquaParkManager"
+        mc:Ignorable="d"
+        Title="Aqua Park Manager" Height="600" Width="900" WindowStartupLocation="CenterScreen">
+    
+    <Window.Resources>
+        <Style x:Key="MenuButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#FF2E86AB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF1F5F7A"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF164A5C"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
-        <StackPanel Grid.Row="0" Margin="0,20,0,30">
-            <TextBlock Text="Main Menu" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
-            <TextBlock Text="Select a module to continue" FontSize="14" Foreground="Gray" HorizontalAlignment="Center" Margin="0,5,0,0"/>
-        </StackPanel>
-
-        <UniformGrid Grid.Row="1" Columns="3" Margin="10">
-            <Button Click="BtnFac_Click" Margin="10">
-                <StackPanel>
-                    <TextBlock Text="🏭" FontSize="40" HorizontalAlignment="Center"/>
-                    <TextBlock Text="FACILITIES" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Pools, Attractions, Inventory" FontSize="11" Foreground="Gray" HorizontalAlignment="Center"/>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#FF2E86AB" Padding="20">
+            <StackPanel>
+                <TextBlock Text="Aqua Park Management System" 
+                          FontSize="24" 
+                          FontWeight="Bold" 
+                          Foreground="White" 
+                          HorizontalAlignment="Center"/>
+                <TextBlock Text="Manage your aqua park operations" 
+                          FontSize="14" 
+                          Foreground="White" 
+                          HorizontalAlignment="Center" 
+                          Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Background="#FFF8F9FA">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Navigation Menu -->
+            <Border Grid.Column="0" Background="White" BorderBrush="#FFE0E0E0" BorderThickness="0,0,1,0">
+                <StackPanel Margin="20">
+                    <TextBlock Text="Management Modules" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+                    
+                    <Button x:Name="btnStaff" Content="👥 Staff Management" 
+                           Style="{StaticResource MenuButtonStyle}" 
+                           Click="BtnStaff_Click" Margin="0,0,0,10"/>
+                    
+                    <Button x:Name="btnPools" Content="🏊 Pools Management" 
+                           Style="{StaticResource MenuButtonStyle}" 
+                           Click="BtnPools_Click" Margin="0,0,0,10"/>
+                    
+                    <Button x:Name="btnSlides" Content="🎢 Slides Management" 
+                           Style="{StaticResource MenuButtonStyle}" 
+                           Click="BtnSlides_Click" Margin="0,0,0,10"/>
+                    
+                    <Button x:Name="btnVisitors" Content="👤 Visitors Management" 
+                           Style="{StaticResource MenuButtonStyle}" 
+                           Click="BtnVisitors_Click" Margin="0,0,0,10"/>
+                    
+                    <Button x:Name="btnTickets" Content="🎫 Tickets Management" 
+                           Style="{StaticResource MenuButtonStyle}" 
+                           Click="BtnTickets_Click" Margin="0,0,0,10"/>
+                    
+                    <Button x:Name="btnBookings" Content="📅 Bookings Management" 
+                           Style="{StaticResource MenuButtonStyle}" 
+                           Click="BtnBookings_Click" Margin="0,0,0,10"/>
+                    
+                    <Button x:Name="btnAttractions" Content="🎯 Attractions Management" 
+                           Style="{StaticResource MenuButtonStyle}" 
+                           Click="BtnAttractions_Click" Margin="0,0,0,10"/>
+                    
+                    <Button x:Name="btnMaintenance" Content="🔧 Maintenance Records" 
+                           Style="{StaticResource MenuButtonStyle}" 
+                           Click="BtnMaintenance_Click" Margin="0,0,0,10"/>
                 </StackPanel>
-            </Button>
-
-            <Button Click="BtnHR_Click" Margin="10">
-                <StackPanel>
-                    <TextBlock Text="👥" FontSize="40" HorizontalAlignment="Center"/>
-                    <TextBlock Text="HR &amp; STAFF" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Employees, Shifts, Roles" FontSize="11" Foreground="Gray" HorizontalAlignment="Center"/>
+            </Border>
+            
+            <!-- Content Area -->
+            <Grid Grid.Column="1" Margin="20">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="🏊‍♂️" FontSize="80" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                    <TextBlock Text="Welcome to Aqua Park Manager" 
+                              FontSize="24" 
+                              FontWeight="Bold" 
+                              HorizontalAlignment="Center" 
+                              Margin="0,0,0,10"/>
+                    <TextBlock Text="Select a management module from the left menu to get started." 
+                              FontSize="14" 
+                              Foreground="#FF666666" 
+                              HorizontalAlignment="Center" 
+                              TextWrapping="Wrap" 
+                              TextAlignment="Center" 
+                              MaxWidth="400"/>
                 </StackPanel>
-            </Button>
-
-            <Button Click="BtnSales_Click" Margin="10">
-                <StackPanel>
-                    <TextBlock Text="💰" FontSize="40" HorizontalAlignment="Center"/>
-                    <TextBlock Text="SALES" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Bookings, Visitors, Payments" FontSize="11" Foreground="Gray" HorizontalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-        </UniformGrid>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>
