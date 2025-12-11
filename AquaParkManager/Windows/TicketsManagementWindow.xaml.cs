@@ -29,7 +29,10 @@ namespace AquaParkManager.Windows
                 var bookings = _context.Bookings.OrderByDescending(b => b.BookingId).ToList();
                 cmbBooking.ItemsSource = bookings;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error loading bookings: {ex.Message}";
+            }
         }
 
         private void LoadTicketTypes()
@@ -41,7 +44,10 @@ namespace AquaParkManager.Windows
                 cmbTicketType.DisplayMemberPath = "Name";
                 cmbTicketType.SelectedValuePath = "TicketTypeId";
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error loading ticket types: {ex.Message}";
+            }
         }
 
         private void LoadTickets()
@@ -69,6 +75,7 @@ namespace AquaParkManager.Windows
                 cmbTicketType.SelectedValue = _selectedItem.TicketTypeId;
                 txtQuantity.Text = _selectedItem.Quantity.ToString();
                 txtPricePaid.Text = _selectedItem.UnitPrice.ToString();
+                lblStatus.Text = "Editing selected ticket item";
             }
         }
 
@@ -76,6 +83,7 @@ namespace AquaParkManager.Windows
         {
             ClearForm();
             _selectedItem = null;
+            lblStatus.Text = "Ready to add new ticket";
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -86,6 +94,7 @@ namespace AquaParkManager.Windows
                 if (cmbBooking.SelectedValue == null)
                 {
                     MessageBox.Show("Please select a Booking ID first!");
+                    lblStatus.Text = "Please select a Booking ID first!";
                     return;
                 }
 
@@ -115,10 +124,12 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadTickets();
                 ClearForm();
+                lblStatus.Text = "Ticket saved successfully";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error: {ex.Message}");
+                lblStatus.Text = $"Error saving ticket: {ex.Message}";
             }
         }
 
@@ -130,6 +141,7 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadTickets();
                 ClearForm();
+                lblStatus.Text = "Ticket deleted successfully";
             }
         }
 
@@ -142,6 +154,7 @@ namespace AquaParkManager.Windows
             txtQuantity.Text = "1";
             txtPricePaid.Text = "";
             _selectedItem = null;
+            lblStatus.Text = "Form cleared";
         }
 
         protected override void OnClosed(EventArgs e)

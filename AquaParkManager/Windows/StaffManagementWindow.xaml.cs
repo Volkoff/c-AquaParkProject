@@ -40,7 +40,8 @@ namespace AquaParkManager.Windows
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Chyba pøi naèítání rolí: " + ex.Message);
+                MessageBox.Show("Chyba pï¿½i naï¿½ï¿½tï¿½nï¿½ rolï¿½: " + ex.Message);
+                lblStatus.Text = $"Chyba pÅ™i naÄÃ­tÃ¡nÃ­ rolÃ­: {ex.Message}";
             }
         }
 
@@ -48,18 +49,19 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // Musíme naèíst i Adresu a její PSÈ (Include)
+                // Musï¿½me naï¿½ï¿½st i Adresu a jejï¿½ PSï¿½ (Include)
                 var staff = _context.Staff
                     .Include(s => s.Address)
                     .ThenInclude(a => a.PostalCode)
                     .ToList();
 
                 dgStaff.ItemsSource = staff;
-                lblStatus.Text = $"Naèteno {staff.Count} zamìstnancù";
+                lblStatus.Text = $"Naï¿½teno {staff.Count} zamï¿½stnancï¿½";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Chyba pøi naèítání zamìstnancù: {ex.Message}\nInner: {ex.InnerException?.Message}");
+                MessageBox.Show($"Chyba pï¿½i naï¿½ï¿½tï¿½nï¿½ zamï¿½stnancï¿½: {ex.Message}\nInner: {ex.InnerException?.Message}");
+                lblStatus.Text = $"Chyba pÅ™i naÄÃ­tÃ¡nÃ­ zamÄ›stnancÅ¯: {ex.Message}";
             }
         }
 
@@ -70,7 +72,7 @@ namespace AquaParkManager.Windows
             txtEmail.Text = staff.Email ?? "";
             txtPhone.Text = staff.Phone ?? "";
 
-            // --- Naètení Adresy ---
+            // --- Naï¿½tenï¿½ Adresy ---
             if (staff.Address != null)
             {
                 txtStreet.Text = staff.Address.Street ?? "";
@@ -86,7 +88,7 @@ namespace AquaParkManager.Windows
             }
             else
             {
-                // Vymazat pole adresy, pokud zamìstnanec adresu nemá (nemìlo by nastat díky NOT NULL)
+                // Vymazat pole adresy, pokud zamï¿½stnanec adresu nemï¿½ (nemï¿½lo by nastat dï¿½ky NOT NULL)
                 ClearAddressFields();
             }
             // ----------------------
@@ -95,7 +97,7 @@ namespace AquaParkManager.Windows
             chkActive.IsChecked = staff.Active == "Y";
             txtNotes.Text = staff.Notes ?? "";
 
-            // Nastavení rolí
+            // Nastavenï¿½ rolï¿½
             var assignedRoleIds = _context.StaffRoles
                                     .Where(sr => sr.StaffId == staff.StaffId)
                                     .Select(sr => sr.RoleId)
@@ -112,22 +114,22 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // 1. Validace základních údajù
+                // 1. Validace zï¿½kladnï¿½ch ï¿½dajï¿½
                 if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(txtLastName.Text))
                 {
-                    MessageBox.Show("Jméno a pøíjmení jsou povinné.", "Chyba", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Jmï¿½no a pï¿½ï¿½jmenï¿½ jsou povinnï¿½.", "Chyba", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // 2. Validace adresy (DB vyžaduje HouseNumber, City, Zip, Region, Country)
+                // 2. Validace adresy (DB vyï¿½aduje HouseNumber, City, Zip, Region, Country)
                 if (string.IsNullOrWhiteSpace(txtHouseNumber.Text) || string.IsNullOrWhiteSpace(txtCity.Text) ||
                     string.IsNullOrWhiteSpace(txtZip.Text))
                 {
-                    MessageBox.Show("Vyplòte prosím adresu (Èíslo popisné, Mìsto, PSÈ).", "Chyba adresy", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Vyplï¿½te prosï¿½m adresu (ï¿½ï¿½slo popisnï¿½, Mï¿½sto, PSï¿½).", "Chyba adresy", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // 3. Zpracování ADRESY a PSÈ
+                // 3. Zpracovï¿½nï¿½ ADRESY a PSï¿½
                 int addressId = GetOrCreateAddress(
                     txtStreet.Text.Trim(),
                     txtHouseNumber.Text.Trim(),
@@ -137,9 +139,9 @@ namespace AquaParkManager.Windows
                     txtCountry.Text.Trim()
                 );
 
-                // 4. Pøíprava rolí (JobTitle string)
+                // 4. Pï¿½ï¿½prava rolï¿½ (JobTitle string)
                 var selectedRoles = _roleSelections.Where(r => r.IsSelected).ToList();
-                string jobTitleString = selectedRoles.Any() ? string.Join(", ", selectedRoles.Select(r => r.RoleName)) : "Zamìstnanec";
+                string jobTitleString = selectedRoles.Any() ? string.Join(", ", selectedRoles.Select(r => r.RoleName)) : "Zamï¿½stnanec";
 
                 int staffId = 0;
 
@@ -156,13 +158,13 @@ namespace AquaParkManager.Windows
                         HireDate = dpHireDate.SelectedDate ?? DateTime.Now,
                         Active = chkActive.IsChecked == true ? "Y" : "N",
                         Notes = txtNotes.Text.Trim(),
-                        AddressId = addressId // Zde použijeme získané ID
+                        AddressId = addressId // Zde pouï¿½ijeme zï¿½skanï¿½ ID
                     };
 
                     _context.Staff.Add(newStaff);
                     _context.SaveChanges();
                     staffId = newStaff.StaffId;
-                    lblStatus.Text = "Zamìstnanec pøidán.";
+                    lblStatus.Text = "Zamï¿½stnanec pï¿½idï¿½n.";
                 }
                 else
                 {
@@ -179,10 +181,10 @@ namespace AquaParkManager.Windows
 
                     _context.SaveChanges();
                     staffId = _selectedStaff.StaffId;
-                    lblStatus.Text = "Zamìstnanec aktualizován.";
+                    lblStatus.Text = "Zamï¿½stnanec aktualizovï¿½n.";
                 }
 
-                // 5. Aktualizace vazební tabulky rolí
+                // 5. Aktualizace vazebnï¿½ tabulky rolï¿½
                 UpdateStaffRolesInDatabase(staffId, selectedRoles);
 
                 LoadStaff();
@@ -191,14 +193,15 @@ namespace AquaParkManager.Windows
             catch (Exception ex)
             {
                 var inner = ex.InnerException != null ? ex.InnerException.Message : "";
-                MessageBox.Show($"Chyba pøi ukládání: {ex.Message}\n\nDetaily: {inner}", "Chyba", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Chyba pï¿½i uklï¿½dï¿½nï¿½: {ex.Message}\n\nDetaily: {inner}", "Chyba", MessageBoxButton.OK, MessageBoxImage.Error);
+                lblStatus.Text = $"Chyba pÅ™i uklÃ¡dÃ¡nÃ­: {ex.Message}";
             }
         }
 
-        // --- POMOCNÁ METODA PRO ADRESY ---
+        // --- POMOCNï¿½ METODA PRO ADRESY ---
         private int GetOrCreateAddress(string street, string houseNum, string city, string zip, string region, string country)
         {
-            // A. Najdeme nebo vytvoøíme PSÈ
+            // A. Najdeme nebo vytvoï¿½ï¿½me PSï¿½
             var postalCode = _context.PostalCodes
                 .FirstOrDefault(p => p.Code == zip && p.City == city);
 
@@ -208,15 +211,15 @@ namespace AquaParkManager.Windows
                 {
                     Code = zip,
                     City = city,
-                    Region = string.IsNullOrEmpty(region) ? "Nezadáno" : region,
-                    Country = string.IsNullOrEmpty(country) ? "Nezadáno" : country
+                    Region = string.IsNullOrEmpty(region) ? "Nezadï¿½no" : region,
+                    Country = string.IsNullOrEmpty(country) ? "Nezadï¿½no" : country
                 };
                 _context.PostalCodes.Add(postalCode);
-                _context.SaveChanges(); // Musíme uložit, abychom mìli PostalCodeId
+                _context.SaveChanges(); // Musï¿½me uloï¿½it, abychom mï¿½li PostalCodeId
             }
 
-            // B. Najdeme nebo vytvoøíme ADRESU
-            // Zjednodušená kontrola: hledáme shodu v ulici, èísle a ID psè
+            // B. Najdeme nebo vytvoï¿½ï¿½me ADRESU
+            // Zjednoduï¿½enï¿½ kontrola: hledï¿½me shodu v ulici, ï¿½ï¿½sle a ID psï¿½
             var address = _context.Address
                 .FirstOrDefault(a => a.Street == street && a.HouseNumber == houseNum && a.PostalCodeId == postalCode.PostalCodeId);
 
@@ -240,11 +243,11 @@ namespace AquaParkManager.Windows
             var currentRelations = _context.StaffRoles.Where(sr => sr.StaffId == staffId).ToList();
             var desiredRoleIds = selectedRoles.Select(r => r.RoleId).ToList();
 
-            // Smazat nechtìné
+            // Smazat nechtï¿½nï¿½
             var toDelete = currentRelations.Where(sr => !desiredRoleIds.Contains(sr.RoleId)).ToList();
             if (toDelete.Any()) _context.StaffRoles.RemoveRange(toDelete);
 
-            // Pøidat nové
+            // Pï¿½idat novï¿½
             var existingRoleIds = currentRelations.Select(sr => sr.RoleId).ToList();
             var toAddIds = desiredRoleIds.Except(existingRoleIds).ToList();
 
@@ -271,6 +274,7 @@ namespace AquaParkManager.Windows
             chkActive.IsChecked = true;
             txtNotes.Text = "";
             _selectedStaff = null;
+            lblStatus.Text = "Form cleared";
         }
 
         private void ClearAddressFields()
@@ -279,14 +283,14 @@ namespace AquaParkManager.Windows
             txtHouseNumber.Text = "";
             txtCity.Text = "";
             txtZip.Text = "";
-            txtRegion.Text = "Pardubický kraj";
-            txtCountry.Text = "Èeská republika";
+            txtRegion.Text = "Pardubickï¿½ kraj";
+            txtCountry.Text = "ï¿½eskï¿½ republika";
         }
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // Pro zjednodušení vyhledávání (Search logic) znovu naèteme vše a filtrujeme v pamìti
-            // nebo udìláme dotaz. Zde jen reload:
+            // Pro zjednoduï¿½enï¿½ vyhledï¿½vï¿½nï¿½ (Search logic) znovu naï¿½teme vï¿½e a filtrujeme v pamï¿½ti
+            // nebo udï¿½lï¿½me dotaz. Zde jen reload:
             var searchText = txtSearch.Text.ToLower();
             if (string.IsNullOrEmpty(searchText)) { LoadStaff(); return; }
 
@@ -298,7 +302,10 @@ namespace AquaParkManager.Windows
                      .ToList();
                 dgStaff.ItemsSource = staff;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error filtering staff: {ex.Message}";
+            }
         }
 
         private void BtnAddStaff_Click(object sender, RoutedEventArgs e) { ClearForm(); _selectedStaff = null; txtFirstName.Focus(); }
@@ -307,6 +314,7 @@ namespace AquaParkManager.Windows
         {
             _selectedStaff = dgStaff.SelectedItem as Staff;
             if (_selectedStaff != null) LoadStaffDetails(_selectedStaff);
+            if (_selectedStaff != null) lblStatus.Text = $"Selected: {_selectedStaff.FirstName} {_selectedStaff.LastName}";
         }
         private void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
@@ -319,8 +327,9 @@ namespace AquaParkManager.Windows
                     _context.SaveChanges();
                     LoadStaff();
                     ClearForm();
+                    lblStatus.Text = "ZamÄ›stnanec smazÃ¡n.";
                 }
-                catch (Exception ex) { MessageBox.Show("Chyba pøi mazání: " + ex.Message); }
+                catch (Exception ex) { MessageBox.Show("Chyba pï¿½i mazï¿½nï¿½: " + ex.Message); }
             }
         }
         protected override void OnClosed(EventArgs e) { _context?.Dispose(); base.OnClosed(e); }

@@ -28,7 +28,10 @@ namespace AquaParkManager.Windows
                 var visitors = _context.Visitors.ToList();
                 cmbVisitor.ItemsSource = visitors;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error loading visitors: {ex.Message}";
+            }
         }
 
         private void LoadBookings()
@@ -58,6 +61,7 @@ namespace AquaParkManager.Windows
                 txtTotalAmount.Text = _selectedBooking.TotalAmount.ToString("C");
                 cmbStatus.Text = _selectedBooking.Status;
                 txtNotes.Text = _selectedBooking.Notes ?? "";
+                lblStatus.Text = $"Selected booking: {_selectedBooking.BookingRef}";
             }
         }
 
@@ -66,6 +70,7 @@ namespace AquaParkManager.Windows
             ClearForm();
             _selectedBooking = null;
             cmbVisitor.Focus();
+            lblStatus.Text = "Ready to add new booking";
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -75,6 +80,7 @@ namespace AquaParkManager.Windows
                 if (cmbVisitor.SelectedValue == null)
                 {
                     MessageBox.Show("Please select a visitor.");
+                    lblStatus.Text = "Please select a visitor.";
                     return;
                 }
                 int visitorId = (int)cmbVisitor.SelectedValue;
@@ -88,7 +94,7 @@ namespace AquaParkManager.Windows
                         CreatedDate = dpCreatedDate.SelectedDate ?? DateTime.Now,
                         Status = cmbStatus.Text,
                         Notes = txtNotes.Text.Trim(),
-                        TotalAmount = 0 // Inicializace na 0, DB si to dopoèítá podle položek
+                        TotalAmount = 0 // Inicializace na 0, DB si to dopoï¿½ï¿½tï¿½ podle poloï¿½ek
                     };
 
                     _context.Bookings.Add(newBooking);
@@ -100,7 +106,7 @@ namespace AquaParkManager.Windows
                     _selectedBooking.CreatedDate = dpCreatedDate.SelectedDate ?? _selectedBooking.CreatedDate;
                     _selectedBooking.Status = cmbStatus.Text;
                     _selectedBooking.Notes = txtNotes.Text.Trim();
-                    // TotalAmount neaktualizujeme, dìlá to DB
+                    // TotalAmount neaktualizujeme, dï¿½lï¿½ to DB
                 }
 
                 _context.SaveChanges();
@@ -111,6 +117,7 @@ namespace AquaParkManager.Windows
             catch (Exception ex)
             {
                 MessageBox.Show($"Error saving booking: {ex.Message}");
+                lblStatus.Text = $"Error saving booking: {ex.Message}";
             }
         }
 
@@ -122,6 +129,7 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadBookings();
                 ClearForm();
+                lblStatus.Text = "Booking deleted successfully";
             }
         }
 
@@ -136,7 +144,10 @@ namespace AquaParkManager.Windows
                     .Where(b => (b.BookingRef != null && b.BookingRef.ToLower().Contains(searchText)))
                     .ToList();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error filtering bookings: {ex.Message}";
+            }
         }
 
         private void ClearForm()
@@ -147,6 +158,7 @@ namespace AquaParkManager.Windows
             txtTotalAmount.Text = "";
             cmbStatus.SelectedIndex = 0;
             txtNotes.Text = "";
+            lblStatus.Text = "Form cleared";
         }
     }
 }

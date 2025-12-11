@@ -27,10 +27,12 @@ namespace AquaParkManager.Windows
                 // Načteme seznam, ale zatím NE data (abychom nebrzdili aplikaci)
                 var list = _context.Media.Select(m => new { m.MediaId, m.FileName, m.MimeType }).ToList();
                 dgMedia.ItemsSource = list;
+                lblStatus.Text = $"Loaded {list.Count} media items";
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error loading media: " + ex.Message);
+                lblStatus.Text = "Error loading media";
             }
         }
 
@@ -58,11 +60,13 @@ namespace AquaParkManager.Windows
                     _context.Media.Add(newMedia);
                     _context.SaveChanges();
                     LoadMedia();
+                    lblStatus.Text = "Image saved to database BLOB successfully!";
                     MessageBox.Show("Image saved to database BLOB successfully!");
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show("Error saving BLOB: " + ex.Message);
+                    lblStatus.Text = "Error saving BLOB";
                 }
             }
         }
@@ -80,12 +84,22 @@ namespace AquaParkManager.Windows
             {
                 using (var ms = new MemoryStream(fullRecord.MediaData))
                 {
-                    var image = new BitmapImage();
-                    image.BeginInit();
-                    image.StreamSource = ms;
-                    image.CacheOption = BitmapCacheOption.OnLoad;
-                    image.EndInit();
-                    imgPreview.Source = image;
+                    try
+                    {
+                        var image = new BitmapImage();
+                        image.BeginInit();
+                        image.StreamSource = ms;
+                        image.CacheOption = BitmapCacheOption.OnLoad;
+                        image.EndInit();
+                        imgPreview.Source = image;
+                        lblStatus.Text = $"Previewing: {fullRecord.FileName}";
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error displaying image: " + ex.Message);
+                        lblStatus.Text = "Error displaying image";
+
+                    }
                 }
             }
         }

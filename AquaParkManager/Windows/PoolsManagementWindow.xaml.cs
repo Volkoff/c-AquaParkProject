@@ -41,7 +41,10 @@ namespace AquaParkManager.Windows
             {
                 dgPools.ItemsSource = _context.Pools.Where(p => p.Name.ToLower().Contains(searchText)).ToList();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error filtering pools: {ex.Message}";
+            }
         }
 
         private void DgPools_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -53,6 +56,7 @@ namespace AquaParkManager.Windows
                 txtCapacity.Text = _selectedPool.Capacity.ToString();
                 chkIndoors.IsChecked = _selectedPool.Indoors == "Y";
                 txtNotes.Text = _selectedPool.Notes ?? "";
+                lblStatus.Text = $"Selected pool: {_selectedPool.Name}";
             }
         }
 
@@ -92,10 +96,12 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadPools();
                 ClearForm();
+                lblStatus.Text = "Pool saved successfully";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error saving pool: {ex.Message}");
+                lblStatus.Text = $"Error saving pool: {ex.Message}";
             }
         }
 
@@ -107,6 +113,7 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadPools();
                 ClearForm();
+                lblStatus.Text = "Pool deleted successfully";
             }
         }
 
@@ -119,6 +126,7 @@ namespace AquaParkManager.Windows
             chkIndoors.IsChecked = false;
             txtNotes.Text = "";
             _selectedPool = null;
+            lblStatus.Text = "Form cleared";
         }
 
         protected override void OnClosed(EventArgs e)

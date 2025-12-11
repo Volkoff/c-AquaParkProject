@@ -59,38 +59,66 @@
             
             <!-- Navigation Menu -->
             <Border Grid.Column="0" Background="White" BorderBrush="#FFE0E0E0" BorderThickness="0,0,1,0">
-                <StackPanel Margin="20">
-                    <TextBlock Text="Management Modules" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
-                    
-                    <Button x:Name="btnStaff" Content="👥 Staff Management" 
-                           Style="{StaticResource MenuButtonStyle}" 
-                           Click="BtnStaff_Click" Margin="0,0,0,10"/>
-                    
-                    <Button x:Name="btnPools" Content="🏊 Pools Management" 
-                           Style="{StaticResource MenuButtonStyle}" 
-                           Click="BtnPools_Click" Margin="0,0,0,10"/>
-                    
-                    <Button x:Name="btnSlides" Content="🎢 Slides Management" 
-                           Style="{StaticResource MenuButtonStyle}" 
-                           Click="BtnSlides_Click" Margin="0,0,0,10"/>
-                    
-                    <Button x:Name="btnVisitors" Content="👤 Visitors Management" 
-                           Style="{StaticResource MenuButtonStyle}" 
-                           Click="BtnVisitors_Click" Margin="0,0,0,10"/>
-                    
-                    <Button x:Name="btnTickets" Content="🎫 Tickets Management" 
-                           Style="{StaticResource MenuButtonStyle}" 
-                           Click="BtnTickets_Click" Margin="0,0,0,10"/>
-                    
-                    <Button x:Name="btnBookings" Content="📅 Bookings Management" 
-                           Style="{StaticResource MenuButtonStyle}" 
-                           Click="BtnBookings_Click" Margin="0,0,0,10"/>
-                    
-                    
-                    <Button x:Name="btnMaintenance" Content="🔧 Maintenance Records" 
-                           Style="{StaticResource MenuButtonStyle}" 
-                           Click="BtnMaintenance_Click" Margin="0,0,0,10"/>
-                </StackPanel>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20">
+                        <TextBlock Text="Management Modules" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+                        
+                        <TextBlock Text="Core Operations" FontSize="12" FontWeight="Bold" Foreground="#FF666666" Margin="0,0,0,5"/>
+                        
+                        <Button x:Name="btnStaff" Content="👥 Staff Management" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnStaff_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnPools" Content="🏊 Pools Management" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnPools_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnSlides" Content="🎢 Slides Management" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnSlides_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnVisitors" Content="👤 Visitors Management" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnVisitors_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnTickets" Content="🎫 Tickets Management" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnTickets_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnBookings" Content="📅 Bookings Management" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnBookings_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnMaintenance" Content="🔧 Maintenance Records" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnMaintenance_Click" Margin="0,0,0,10"/>
+                        
+                        <Separator Margin="0,10,0,10"/>
+                        <TextBlock Text="Advanced Features" FontSize="12" FontWeight="Bold" Foreground="#FF666666" Margin="0,0,0,5"/>
+                        
+                        <Button x:Name="btnCertifications" Content="📜 Certifications" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnCertifications_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnInventory" Content="📦 Inventory Management" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnInventory_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnScheduling" Content="📆 Staff Scheduling" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnScheduling_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnReports" Content="📊 Reports Analytics" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnReports_Click" Margin="0,0,0,10"/>
+                        
+                        <Button x:Name="btnMedia" Content="🎬 Media Management" 
+                               Style="{StaticResource MenuButtonStyle}" 
+                               Click="BtnMedia_Click" Margin="0,0,0,10"/>
+
+                       
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
             
             <!-- Content Area -->

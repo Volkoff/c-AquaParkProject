@@ -49,8 +49,12 @@ namespace AquaParkManager.Windows
                                (v.LastName != null && v.LastName.ToLower().Contains(searchText)))
                     .ToList();
                 dgVisitors.ItemsSource = filteredVisitors;
+                lblStatus.Text = $"Search results: {filteredVisitors.Count} visitors";
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error filtering visitors: {ex.Message}";
+            }
         }
 
         private void DgVisitors_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -95,6 +99,7 @@ namespace AquaParkManager.Windows
             ClearForm();
             _selectedVisitor = null;
             txtFirstName.Focus();
+            lblStatus.Text = "Ready to add new visitor";
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -156,13 +161,14 @@ namespace AquaParkManager.Windows
             catch (Exception ex)
             {
                 MessageBox.Show($"Error saving visitor: {ex.Message}");
+                lblStatus.Text = $"Error saving visitor: {ex.Message}";
             }
         }
 
         private int GetOrCreateAddress(string street, string houseNum, string city, string zip, string region, string country)
         {
-            if (string.IsNullOrEmpty(region)) region = "Nezadáno";
-            if (string.IsNullOrEmpty(country)) country = "Nezadáno";
+            if (string.IsNullOrEmpty(region)) region = "Nezadï¿½no";
+            if (string.IsNullOrEmpty(country)) country = "Nezadï¿½no";
 
             var postalCode = _context.PostalCodes
                 .FirstOrDefault(p => p.Code == zip && p.City == city);
@@ -207,10 +213,12 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadVisitors();
                 ClearForm();
+                lblStatus.Text = "Visitor deleted successfully";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error: {ex.Message}");
+                lblStatus.Text = $"Error deleting visitor: {ex.Message}";
             }
         }
 
@@ -226,6 +234,7 @@ namespace AquaParkManager.Windows
             txtNotes.Text = "";
             ClearAddressFields();
             _selectedVisitor = null;
+            lblStatus.Text = "Form cleared";
         }
 
         private void ClearAddressFields()
@@ -234,8 +243,8 @@ namespace AquaParkManager.Windows
             txtHouseNumber.Text = "";
             txtCity.Text = "";
             txtZip.Text = "";
-            txtRegion.Text = "Pardubický kraj";
-            txtCountry.Text = "Èeská republika";
+            txtRegion.Text = "Pardubickï¿½ kraj";
+            txtCountry.Text = "ï¿½eskï¿½ republika";
         }
 
         protected override void OnClosed(EventArgs e)

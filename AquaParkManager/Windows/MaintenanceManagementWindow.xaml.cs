@@ -26,13 +26,16 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // Naèteme atrakce pro výbìr
+                // Naï¿½teme atrakce pro vï¿½bï¿½r
                 var attractions = _context.Attractions.ToList();
                 cmbAttraction.ItemsSource = attractions;
                 cmbAttraction.DisplayMemberPath = "Name";
                 cmbAttraction.SelectedValuePath = "AttractionId";
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error loading attractions: {ex.Message}";
+            }
         }
 
         private void LoadStaff()
@@ -44,7 +47,10 @@ namespace AquaParkManager.Windows
                 cmbStaff.DisplayMemberPath = "FullName";
                 cmbStaff.SelectedValuePath = "StaffId";
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lblStatus.Text = $"Error loading staff: {ex.Message}";
+            }
         }
 
         private void LoadMaintenanceRecords()
@@ -61,6 +67,7 @@ namespace AquaParkManager.Windows
             catch (Exception ex)
             {
                 MessageBox.Show($"Error: {ex.Message}");
+                lblStatus.Text = $"Error loading maintenance records: {ex.Message}";
             }
         }
 
@@ -78,6 +85,7 @@ namespace AquaParkManager.Windows
                 }
 
                 txtProblemDescription.Text = _selectedMaintenance.ProblemDescription ?? "";
+                lblStatus.Text = $"Selected maintenance record: {_selectedMaintenance.MaintenanceId}";
             }
         }
 
@@ -85,6 +93,7 @@ namespace AquaParkManager.Windows
         {
             ClearForm();
             _selectedMaintenance = null;
+            lblStatus.Text = "Ready to add maintenance record";
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -117,10 +126,12 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadMaintenanceRecords();
                 ClearForm();
+                lblStatus.Text = "Maintenance saved successfully";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error saving: {ex.Message}");
+                lblStatus.Text = $"Error saving maintenance: {ex.Message}";
             }
         }
 
@@ -132,6 +143,7 @@ namespace AquaParkManager.Windows
                 _context.SaveChanges();
                 LoadMaintenanceRecords();
                 ClearForm();
+                lblStatus.Text = "Maintenance record deleted successfully";
             }
         }
 
@@ -144,6 +156,7 @@ namespace AquaParkManager.Windows
             dpReportDate.SelectedDate = DateTime.Now;
             txtProblemDescription.Text = "";
             _selectedMaintenance = null;
+            lblStatus.Text = "Form cleared";
         }
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }

@@ -79,5 +79,46 @@ namespace AquaParkManager
             var maintenanceWindow = new MaintenanceManagementWindow();
             maintenanceWindow.ShowDialog();
         }
+
+        private void BtnCertifications_Click(object sender, RoutedEventArgs e)
+        {
+            var certificationsWindow = new CertificationsManagementWindow();
+            certificationsWindow.ShowDialog();
+        }
+
+        private void BtnInventory_Click(object sender, RoutedEventArgs e)
+        {
+            var inventoryWindow = new InventoryManagementWindow();
+            inventoryWindow.ShowDialog();
+        }
+
+        private void BtnScheduling_Click(object sender, RoutedEventArgs e)
+        {
+            var schedulingWindow = new SchedulingWindow();
+            schedulingWindow.ShowDialog();
+        }
+
+        private void BtnReports_Click(object sender, RoutedEventArgs e)
+        {
+            var reportsWindow = new ReportsAnalyticsWindow();
+            reportsWindow.ShowDialog();
+        }
+
+        private void BtnMedia_Click(object sender, RoutedEventArgs e)
+        {
+            var mediaWindow = new MediaManagementWindow();
+            mediaWindow.ShowDialog();
+        }
+        private void BtnSchedule_Click(object sender, RoutedEventArgs e)
+        {
+            var schedulingWindow = new SchedulingWindow();
+            schedulingWindow.ShowDialog();
+        }
+
+        private void BtnAnalytics_Click(object sender, RoutedEventArgs e)
+        {
+            var analyticsWindow = new ReportsAnalyticsWindow();
+            analyticsWindow.ShowDialog();
+        }
     }
 }

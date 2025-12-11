@@ -3,5 +3,50 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:AquaParkManager">
     <Application.Resources>
+        <!-- Color Brushes -->
+        <SolidColorBrush x:Key="HeaderBrush" Color="#FF2E86AB"/>
+        <SolidColorBrush x:Key="AddButtonBrush" Color="#FF28A745"/>
+        <SolidColorBrush x:Key="PrimaryActionBrush" Color="#FF007BFF"/>
+        <SolidColorBrush x:Key="DangerBrush" Color="#FFDC3545"/>
+        <SolidColorBrush x:Key="NeutralBrush" Color="#FF6C757D"/>
+        <SolidColorBrush x:Key="StatusBarBrush" Color="#FFF8F9FA"/>
+        <SolidColorBrush x:Key="HeaderTextBrush" Color="White"/>
+
+        <!-- Header Text styles -->
+        <Style x:Key="HeaderTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource HeaderTextBrush}"/>
+        </Style>
+        <Style x:Key="HeaderSubTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource HeaderTextBrush}"/>
+        </Style>
+
+        <!-- Button styles -->
+        <Style x:Key="AddButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AddButtonBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+        </Style>
+        <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryActionBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+        </Style>
+        <Style x:Key="DangerButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+        </Style>
+        <Style x:Key="NeutralButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource NeutralBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+        </Style>
     </Application.Resources>
 </Application>

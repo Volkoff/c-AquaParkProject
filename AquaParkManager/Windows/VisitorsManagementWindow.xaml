@@ -9,10 +9,10 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#FF2E86AB" Padding="15">
+        <Border Grid.Row="0" Background="{StaticResource HeaderBrush}" Padding="15">
             <StackPanel>
-                <TextBlock Text="👤 Visitors Management" FontSize="20" FontWeight="Bold" Foreground="White"/>
-                <TextBlock Text="Manage visitor profiles (Address required)" FontSize="12" Foreground="White" Margin="0,5,0,0"/>
+                <TextBlock Text="👤 Visitors Management" Style="{StaticResource HeaderTitleStyle}"/>
+                <TextBlock Text="Manage visitor profiles (Address required)" Style="{StaticResource HeaderSubTitleStyle}" Margin="0,5,0,0"/>
             </StackPanel>
         </Border>
 
@@ -32,7 +32,7 @@
 
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
                         <TextBox x:Name="txtSearch" Width="200" Height="30" VerticalContentAlignment="Center" TextChanged="TxtSearch_TextChanged"/>
-                        <Button x:Name="btnAddVisitor" Content="➕ Add Visitor" Margin="10,0,0,0" Padding="15,5" Background="#FF28A745" Foreground="White" BorderThickness="0" Click="BtnAddVisitor_Click"/>
+                        <Button x:Name="btnAddVisitor" Content="➕ Add Visitor" Margin="10,0,0,0" Padding="15,5" Style="{StaticResource AddButtonStyle}" Click="BtnAddVisitor_Click"/>
                     </StackPanel>
 
                     <DataGrid x:Name="dgVisitors" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" SelectionChanged="DgVisitors_SelectionChanged">
@@ -95,15 +95,15 @@
                         <TextBlock Text="Notes:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtNotes" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15"/>
 
-                        <Button x:Name="btnSave" Content="💾 Save" Background="#FF007BFF" Foreground="White" BorderThickness="0" Padding="10,5" Margin="0,0,0,5" Click="BtnSave_Click"/>
-                        <Button x:Name="btnDelete" Content="🗑️ Delete" Background="#FFDC3545" Foreground="White" BorderThickness="0" Padding="10,5" Margin="0,0,0,5" Click="BtnDelete_Click"/>
-                        <Button x:Name="btnClear" Content="🔄 Clear" Background="#FF6C757D" Foreground="White" BorderThickness="0" Padding="10,5" Click="BtnClear_Click"/>
+                        <Button x:Name="btnSave" Content="💾 Save" Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,0,5" Click="BtnSave_Click"/>
+                        <Button x:Name="btnDelete" Content="🗑️ Delete" Style="{StaticResource DangerButtonStyle}" Margin="0,0,0,5" Click="BtnDelete_Click"/>
+                        <Button x:Name="btnClear" Content="🔄 Clear" Style="{StaticResource NeutralButtonStyle}" Click="BtnClear_Click"/>
                     </StackPanel>
                 </ScrollViewer>
             </GroupBox>
         </Grid>
 
-        <StatusBar Grid.Row="2" Background="#FFF8F9FA">
+        <StatusBar Grid.Row="2" Background="{StaticResource StatusBarBrush}">
             <StatusBarItem>
                 <TextBlock x:Name="lblStatus" Text="Ready"/>
             </StatusBarItem>
