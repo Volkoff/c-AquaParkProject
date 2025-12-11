@@ -73,11 +73,6 @@ namespace AquaParkManager
             bookingsWindow.ShowDialog();
         }
 
-        private void BtnAttractions_Click(object sender, RoutedEventArgs e)
-        {
-            var attractionsWindow = new AttractionsManagementWindow();
-            attractionsWindow.ShowDialog();
-        }
 
         private void BtnMaintenance_Click(object sender, RoutedEventArgs e)
         {

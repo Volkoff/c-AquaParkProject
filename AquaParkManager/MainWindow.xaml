@@ -86,9 +86,6 @@
                            Style="{StaticResource MenuButtonStyle}" 
                            Click="BtnBookings_Click" Margin="0,0,0,10"/>
                     
-                    <Button x:Name="btnAttractions" Content="🎯 Attractions Management" 
-                           Style="{StaticResource MenuButtonStyle}" 
-                           Click="BtnAttractions_Click" Margin="0,0,0,10"/>
                     
                     <Button x:Name="btnMaintenance" Content="🔧 Maintenance Records" 
                            Style="{StaticResource MenuButtonStyle}" 
