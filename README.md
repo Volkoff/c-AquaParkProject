@@ -1,72 +1,70 @@
 # Aqua Park Manager
 
-A comprehensive Windows desktop application for managing aqua park operations, built with WPF and Entity Framework Core. The application connects to an Oracle database with a dynamic connection configuration dialog at startup.
+Komplexní desktopová aplikace pro Windows pro správu provozu aquaparku, vytvořená pomocí WPF a Entity Framework Core. Aplikace se připojuje k databázi Oracle pomocí dialogového okna pro dynamickou konfiguraci připojení při spuštění.
 
-## Features
+## Funkce
 
-The application provides management interfaces for:
+Aplikace poskytuje rozhraní pro správu:
 
-- **👥 Staff Management** - Manage staff members, roles, and certifications
-- **🏊 Pools Management** - Manage swimming pools and their specifications
-- **🎢 Slides Management** - Manage water slides and their configurations
-- **👤 Visitors Management** - Manage visitor information and profiles
-- **🎫 Tickets Management** - Manage tickets and ticket types
-- **📅 Bookings Management** - Manage reservations and bookings
-- **🎯 Attractions Management** - Manage park attractions and their status
-- **🔧 Maintenance Records** - Track maintenance and repairs
-- **⏱️ Scheduling Management** - Manage staff shifts and schedules
-- **📦 Inventory Management** - Track inventory items and stock levels
-- **📋 Certifications Management** - Manage staff certifications and training
-- **💰 Concessions Management** - Manage food and beverage sales
-- **📊 Reports & Analytics** - Generate operational reports and insights
+* **👥 Staff Management** - Správa zaměstnanců, rolí a certifikací
+* **🏊 Pools Management** - Správa plaveckých bazénů a jejich specifikací
+* **🎢 Slides Management** - Správa tobogánů a jejich konfigurací
+* **👤 Visitors Management** - Správa informací o návštěvnících a profilech
+* **🎫 Tickets Management** - Správa vstupenek a typů vstupenek
+* **📅 Bookings Management** - Správa rezervací a bookingů
+* **🎯 Attractions Management** - Správa atrakcí v parku a jejich stavu
+* **🔧 Maintenance Records** - Sledování údržby a oprav
+* **⏱️ Scheduling Management** - Správa směn zaměstnanců a rozvrhů
+* **📦 Inventory Management** - Sledování skladových položek a stavu zásob
+* **📋 Certifications Management** - Správa certifikací a školení zaměstnanců
+* **💰 Concessions Management** - Správa prodeje jídla a nápojů
+* **📊 Reports & Analytics** - Generování provozních reportů a analýz
 
-## Getting Started
+## Začínáme
 
-### Prerequisites
+### Prerekvizity
 
-- .NET 8.0 or later
-- Oracle Database 19c or later
-- Visual Studio 2022 or later (recommended)
-- Network access to Oracle database server
+* .NET 8.0 nebo novější
+* Oracle Database 19c nebo novější
+* Visual Studio 2022 nebo novější (doporučeno)
+* Síťový přístup k serveru databáze Oracle
 
-### Installation
+### Instalace
 
-1. Clone the repository
-2. Open the solution in Visual Studio
-3. Build the solution (Ctrl+Shift+B)
-4. Run the application (F5)
+1.  Naklonujte repozitář
+2.  Otevřete řešení (solution) ve Visual Studiu
+3.  Sestavte řešení (Ctrl+Shift+B)
+4.  Spusťte aplikaci (F5)
 
-### Database Connection
+### Připojení k databázi
 
-When you launch the application, a **Database Connection Configuration** dialog appears before login:
+Při spuštění aplikace se před přihlášením zobrazí dialogové okno **Database Connection Configuration**:
 
-1. **Enter Connection Details**:
-   - **Host**: Oracle database server address (e.g., `fei-sql3.upceucebny.cz`)
-   - **Port**: Oracle listener port (default: `1521`)
-   - **SID**: Oracle System Identifier (e.g., `BDAS`)
-   - **User Id**: Oracle database user (e.g., `st72504`)
-   - **Password**: Oracle database password
+1.  **Zadejte údaje o připojení**:
+    * **Host**: Adresa serveru databáze Oracle (např. `fei-sql3.upceucebny.cz`)
+    * **Port**: Port posluchače Oracle (výchozí: `1521`)
+    * **SID**: Identifikátor systému Oracle (např. `BDAS`)
+    * **User Id**: Uživatel databáze Oracle (např. `st72504`)
+    * **Password**: Heslo k databázi Oracle
+2.  **Test připojení**: Kliknutím na tlačítko "Test" ověřte své údaje.
+    * Zpráva o úspěchu potvrdí, že připojení je platné.
+    * Chybová zpráva indikuje problémy s připojením.
+3.  **Připojit**: Kliknutím na "Connect" navažte připojení.
+    * Připojovací řetězec je uložen v paměti pro relaci.
+    * V případě úspěchu se zobrazí přihlašovací okno (Login window).
 
-2. **Test Connection**: Click the "Test" button to verify your credentials
-   - A success message confirms the connection is valid
-   - An error message indicates connection issues
+### Konfigurace databáze
 
-3. **Connect**: Click "Connect" to establish the connection
-   - The connection string is stored in memory for the session
-   - If successful, the Login window appears
+Připojení k databázi je spravováno dynamicky:
 
-### Database Configuration
+* **Uložení Connection Stringu**: Uloženo ve statické vlastnosti `App.ConnectionString`
+* **Umístění konfigurace**: Metoda `AquaParkContext.OnConfiguring()`
+* **Fallback**: Pro vývoj je k dispozici zakomentovaný "hardcoded" připojovací řetězec
 
-The database connection is managed dynamically:
-
-- **Connection String Storage**: Stored in `App.ConnectionString` static property
-- **Configuration Location**: `AquaParkContext.OnConfiguring()` method
-- **Fallback**: A commented-out hardcoded connection string is available for development
-
-The application uses Entity Framework Core 8 with Oracle.EntityFrameworkCore for database operations.
+Aplikace používá Entity Framework Core 8 s Oracle.EntityFrameworkCore pro databázové operace.
 
 ```csharp
-// From AquaParkContext.cs
+// Z AquaParkContext.cs
 protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 {
     if (!string.IsNullOrWhiteSpace(App.ConnectionString))
@@ -203,6 +201,61 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
   - Staff performance metrics
 - **Location**: `Windows/ReportsWindow.xaml`
 
+- **Location**: `Windows/ReportsWindow.xaml`
+
+---
+
+CZ / Čeština — Okna aplikace a moduly
+
+Níže jsou uvedena stejná okna jako výše, stručně v češtině (podrobný popis je v angličtině nahoře):
+
+1. **Dialog konfigurace připojení k databázi** (`Windows/ConnectionConfigWindow.xaml`)
+   - Účel: Zadání a ověření parametrů připojení k Oracle DB (Host, Port, SID, User, Password).
+
+2. **Přihlašovací okno** (`Windows/LoginWindow.xaml`)
+   - Účel: Ověření uživatele proti tabulce `USERS`.
+
+3. **Hlavní okno** (`MainWindow.xaml`)
+   - Účel: Centrální rozhraní s navigací do všech modulů.
+
+4. **Správa zaměstnanců** (`Windows/StaffManagementWindow.xaml`)
+   - Účel: Přidávání, úpravy a mazání záznamů zaměstnanců.
+
+5. **Správa bazénů** (`Windows/PoolsManagementWindow.xaml`)
+   - Účel: Správa záznamů o bazénech (kapacita, hloubka, atd.).
+
+6. **Správa tobogánů** (`Windows/SlidesManagementWindow.xaml`)
+   - Účel: Správa konfigurací tobogánů.
+
+7. **Správa návštěvníků** (`Windows/VisitorsManagementWindow.xaml`)
+   - Účel: Správa profilů návštěvníků.
+
+8. **Správa vstupenek** (`Windows/TicketsManagementWindow.xaml`)
+   - Účel: Správa typů vstupenek a cen.
+
+9. **Správa rezervací** (`Windows/BookingsManagementWindow.xaml`)
+   - Účel: Správa rezervací a bookingů návštěvníků.
+
+10. **Správa údržby** (`Windows/MaintenanceManagementWindow.xaml`)
+    - Účel: Záznamy o údržbě a opravách zařízení.
+
+11. **Správa certifikací** (`Windows/CertificationsManagementWindow.xaml`)
+    - Účel: Sledování certifikací a školení zaměstnanců.
+
+12. **Plánování směn** (`Windows/SchedulingManagementWindow.xaml`)
+    - Účel: Správa směn a rozvrhů zaměstnanců.
+
+13. **Správa zásob** (`Windows/InventoryManagementWindow.xaml`)
+    - Účel: Sledování skladových položek a nízkého stavu zásob.
+
+14. **Správa médií** (`Windows/MediaManagementWindow.xaml`)
+    - Účel: Správa obrázků, videí a dalších mediálních souborů.
+
+15. **Reporty a analytika** (`Windows/ReportsWindow.xaml`)
+    - Účel: Generování provozních reportů (statistiky návštěvnosti, souhrny rezervací, historie údržby).
+
+---
+
 ## Usage Patterns
 
 ### Common Operations
@@ -227,10 +280,41 @@ Each management window follows a consistent pattern:
 - **Water-themed Design** - Background image and water drop icon throughout
 - **Dark Header Bar** - Blue header bar with white text
 - **Color-coded Buttons**:
-  - Green: Add/Create actions
-  - Blue: Primary actions
-  - Red: Delete/Danger actions
-  - Gray: Neutral actions
+   - Green: Add/Create actions
+   - Blue: Primary actions
+   - Red: Delete/Danger actions
+   - Gray: Neutral actions
+
+---
+
+CZ / Čeština — Vzorce používání a funkce
+
+### Běžné operace
+
+Každé správcovské okno používá konzistentní sadu operací:
+
+1. **Zobrazení záznamů** - Datová mřížka zobrazuje záznamy z databáze
+2. **Vyhledávání / Filtry** - Filtrování záznamů při psaní
+3. **Přidat záznam** - Tlačítko "Add" pro vytvoření nového záznamu
+4. **Upravit záznam** - Dvojklik nebo výběr záznamu pro úpravy
+5. **Uložit změny** - Tlačítko "Save" uloží změny do databáze
+6. **Odstranit záznam** - Výběr a klik na "Delete" (s potvrzením)
+7. **Vyčistit formulář** - Tlačítko "Clear" resetuje formulář
+8. **Stavové zprávy** - Stavový řádek zobrazuje výsledky operací
+
+### Funkce
+
+- **Vyhledávání v reálném čase** - Filtrování záznamů během psaní
+- **Validace dat** - Kontroly vstupních dat s chybovými hláškami
+- **Zpětná vazba ve stavu** - Stavový řádek zobrazuje úspěch/chyby
+- **Konzistentní UI** - Všechna okna sdílejí stylování a layout
+- **Vzhled s vodní tematikou** - Pozadí s efektem vody a ikona kapky
+- **Tmavý hlavičkový pruh** - Modrý pruh s bílým textem
+- **Barevně kódovaná tlačítka**:
+   - Zelená: Přidat / Vytvořit
+   - Modrá: Hlavní akce
+   - Červená: Odstranit / Nebezpečné akce
+   - Šedá: Neutrální akce
 
 ## Database Tables
 
@@ -256,6 +340,37 @@ The application manages the following main entities:
 - `LOYALTY_POINTS` - Loyalty program tracking
 - `TRAINING` - Staff training records
 - `OCCUPANCY_TRACKING` - Park occupancy monitoring
+
+- `OCCUPANCY_TRACKING` - Park occupancy monitoring
+
+---
+
+CZ / Čeština — Tabulky databáze
+
+Aplikace pracuje s následujícími hlavními entitami (stejné názvy tabulek v DB):
+
+- `USERS` - Přihlášení uživatelů a autentizace
+- `STAFF` - Zaměstnanci a jejich informace
+- `ROLES` - Role zaměstnanců a oprávnění
+- `CERTIFICATIONS` - Záznamy o certifikacích zaměstnanců
+- `POOLS` - Specifikace bazénů
+- `SLIDES` - Konfigurace tobogánů
+- `VISITORS` - Profily návštěvníků
+- `TICKETS` - Typy a ceny vstupenek
+- `BOOKINGS` - Rezervace návštěvníků
+- `ATTRACTIONS` - Atrakce v parku
+- `MAINTENANCE_RECORDS` - Záznamy o údržbě a opravách
+- `SHIFTS` - Definice směn
+- `STAFF_SHIFTS` - Přiřazení zaměstnanců ke směnám
+- `INVENTORY` - Položky skladu a zásoby
+- `MEDIA` - Mediální soubory
+- `CONCESSIONS` - Prodej jídel a nápojů
+- `MEMBERSHIP` - Informace o členství návštěvníků
+- `LOYALTY_POINTS` - Program věrnostních bodů
+- `TRAINING` - Záznamy o školeních zaměstnanců
+- `OCCUPANCY_TRACKING` - Sledování obsazenosti parku
+
+---
 
 ## Technical Architecture
 
@@ -288,6 +403,42 @@ The application manages the following main entities:
 - Blue header color (#FF2E86AB) for management window headers
 - Color-coded button styles for user guidance
 - Water drop icon (.ico) applied globally to all windows
+
+---
+
+CZ / Čeština — Technická architektura a stylování
+
+### Technologické zásobníky
+
+- **UI framework**: Windows Presentation Foundation (WPF) - .NET 8.0
+- **ORM databáze**: Entity Framework Core 8
+- **Databáze**: Oracle Database (21c a novější)
+- **Poskytovatel**: Oracle.EntityFrameworkCore
+- **Architektonický vzor**: MVVM s částečným code-behind pro business logiku
+
+### Hlavní komponenty
+
+- **App.xaml.cs** - Spouštění aplikace, správa ukončení a uložení connection stringu
+- **App.xaml** - Globální styly (barvy, styly tlačítek, styl oken, pozadí)
+- **AquaParkContext.cs** - DbContext Entity Framework s více než 45 DbSety
+- **Windows/** - Implementace jednotlivých správcovských oken
+
+### Přístup k datům
+
+- Používá Entity Framework Core pro mapování ORM
+- Lazy loading a explicitní načítání příbuzných entit tam, kde je to potřeba
+- Materializace LINQ dotazů (`.ToList()`) před výpočtem vypočtených vlastností kvůli omezením překladů do Oracle SQL
+- Dynamická podpora connection stringu pro flexibilní konfiguraci databáze
+
+### Stylování
+
+- Globální WPF styly v `App.xaml` pro konzistenci
+- `DrawingBrush` kombinující bílou základní vrstvu s PNG obrázkem vodní tříště
+- Modrý hlavičkový pruh pro nadpisy (#FF2E86AB)
+- Barevně kódovaná tlačítka podle významu akce
+- Ikona aplikace (kapka vody) přiložena v `Resources/water_drop.ico`
+
+---
 
 ## Troubleshooting
 
@@ -354,6 +505,66 @@ If you encounter database connection issues:
    - The application materializes large result sets to memory
    - Consider archiving old records to improve performance
 
+---
+
+CZ / Čeština — Řešení problémů
+
+### Problémy s připojením k databázi
+
+Pokud narazíte na potíže s připojením k databázi:
+
+1. **Ověřte dostupnost Oracle serveru**
+   - Ujistěte se, že Oracle server je online a přijímá připojení
+   - Zkontrolujte síťovou konektivitu na daný host
+   - Ověřte správnost hostu, portu a SID
+
+2. **Tlačítko Test připojení**
+   - Použijte tlačítko "Test" v okně konfigurace připojení pro ověření přihlašovacích údajů
+   - Prostudujte chybové kódy (ORA-xxxxx) pro přesnou diagnostiku
+
+3. **Problémy s autentizací**
+   - Zkontrolujte správnost uživatelského jména a hesla
+   - Ujistěte se, že uživatelský účet má potřebná oprávnění
+   - Zkontrolujte, zda účet není zablokovaný nebo expirovaný
+
+### Problémy s přihlášením
+
+1. **Neplatné přihlašovací údaje**
+   - Ověřte, že uživatel existuje v tabulce `USERS`
+   - Zkontrolujte, že připojení k DB bylo úspěšné před přihlášením
+
+2. **Aplikace se zavře po Connect**
+   - Ověřte platnost connection stringu
+   - Zkontrolujte existenci tabulky `USERS`
+
+### Sestavení a závislosti
+
+1. **Chyby NuGet balíčků**
+   - Obnovte NuGet balíčky: `dotnet restore`
+   - Vyčistěte NuGet cache a znovu sestavte projekt
+
+2. **Chybějící .NET SDK**
+   - Ujistěte se, že máte nainstalovaný .NET 8.0 SDK
+
+3. **Problémy s Oracle.EntityFrameworkCore**
+   - Zkontrolujte správné nastavení NuGet zdrojů
+   - Některé systémy mohou vyžadovat nainstalované Oracle klientské knihovny
+
+### Runtime chyby
+
+1. **Žádné záznamy nebo prázdná mřížka**
+   - Zkontrolujte připojení k databázi a existence tabulek
+   - Ujistěte se, že přihlášený uživatel má oprávnění SELECT
+
+2. **Ukládání změn selže**
+   - Zkontrolujte INSERT/UPDATE/DELETE práva uživatele
+   - Ověřte integritu primárních klíčů
+
+3. **Výkonové problémy**
+   - Zvažte filtrování a stránkování větších datasetů
+   - Aplikace materializuje data do paměti pro některé operace
+   - Archivace starých záznamů pomůže zlepšit výkon
+
 ## Project Structure
 
 ```
@@ -391,25 +602,56 @@ c-AquaParkProject/
 └── README.md                             # This file
 ```
 
+---
+
+CZ / Čeština — Struktura projektu
+
+Struktura repozitáře (viz výše pro detailní soubory):
+
+- `AquaParkManager/` – hlavní projekt WPF (složky `Windows/`, `Models/`, `Resources/`)
+- `CREATEDB.sql`, `CREATETABLES.sql` – skripty pro vytvoření databáze/tabulek
+- `convert_svg_to_ico.py` – skript pro generování ikony (volitelný)
+
+---
+
 ## Development Notes
 
 ### Entity Framework Models
 
 The application uses a code-first approach with Entity Framework Core. Models are defined in `AquaParkContext.cs` with DbSet properties for each entity.
 
-### LINQ Query Optimization
+CZ / Čeština — Poznámky k vývoji
+
+### Modely Entity Framework
+
+Aplikace používá přístup "code-first" s Entity Framework Core. Modely jsou definovány v `AquaParkContext.cs` pomocí DbSet vlastností pro každou entitu.
+
+### Optimalizace LINQ dotazů
 
 Due to Oracle's limitations with certain LINQ translations, the application:
 - Materializes queries to memory before computing calculated properties
 - Example: `.ToList().Select(x => new ViewModel { ... })`
 
-### Connection Management
+CZ / Čeština — Optimalizace LINQ
+
+Kvůli omezením překladů LINQ výrazů do Oracle SQL aplikace:
+
+- materializuje dotazy do paměti před výpočtem vypočtených vlastností (`.ToList()`)
+- Příklad: `.ToList().Select(x => new ViewModel { ... })`
+
+### Connection Management / Správa připojení
 
 - Connection string stored in `App.ConnectionString` static property
 - Set by `ConnectionConfigWindow` after successful connection test
 - Used by `AquaParkContext.OnConfiguring()` to initialize DbContext
 
-### Window Lifecycle
+CZ / Čeština — Správa připojení
+
+- Připojovací řetězec je uložen ve statické vlastnosti `App.ConnectionString`
+- Hodnota je nastavena oknem `ConnectionConfigWindow` po úspěšném testu
+- `AquaParkContext.OnConfiguring()` používá tento řetězec pro inicializaci DbContextu
+
+### Window Lifecycle / Životní cyklus oken
 
 1. App startup → `ConnectionConfigWindow` (database config)
 2. Successful connection → `LoginWindow` (user authentication)
@@ -417,7 +659,15 @@ Due to Oracle's limitations with certain LINQ translations, the application:
 4. User can open management windows from main window
 5. Application stays open until user closes main window
 
-## Contributing
+CZ / Čeština — Životní cyklus oken
+
+1. Spuštění aplikace → `ConnectionConfigWindow` (konfigurace DB)
+2. Po úspěšném připojení → `LoginWindow` (autentizace uživatele)
+3. Po úspěšném přihlášení → `MainWindow` (hlavní rozhraní)
+4. Uživatel může otevírat správcovská okna z hlavního okna
+5. Aplikace zůstane spuštěná, dokud uživatel nezavře hlavní okno
+
+## Contributing / Přispívání
 
 This is a comprehensive aqua park management application. To contribute:
 
@@ -426,6 +676,17 @@ This is a comprehensive aqua park management application. To contribute:
 3. Add database migrations when modifying entity models
 4. Test with actual Oracle database connection
 
-## License
+CZ / Čeština — Přispívání
+
+1. Dodržujte konzistenci s existujícími vzory a stylem
+2. Dodržujte konvence pojmenování oken
+3. Přidejte databázové migrace při změně modelů entit
+4. Testujte s reálným připojením k Oracle DB
+
+## License / Licence
 
 This project is provided as-is for educational and demonstration purposes.
+
+CZ / Čeština — Licence
+
+Tento projekt je poskytován "tak jak je" pro vzdělávací a demonstrační účely.

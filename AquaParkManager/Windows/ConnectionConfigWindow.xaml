@@ -1,7 +1,7 @@
 <Window x:Class="AquaParkManager.Windows.ConnectionConfigWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Database Connection" Height="380" Width="450" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+        Title="Database Connection" Height="380" Width="450" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Icon="Resources/water_drop.ico">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

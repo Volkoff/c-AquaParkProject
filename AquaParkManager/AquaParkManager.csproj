@@ -21,9 +21,10 @@
 		<Resource Include="Resources\pngimg.com - water_splash_PNG72.png">
 			<LogicalName>Resources/bg_img.png</LogicalName>
 		</Resource>
-		<Resource Include="Resources\water_drop.ico">
-			<LogicalName>Resources/water_drop.ico</LogicalName>
-		</Resource>
+		<!-- Icon file: copy to output directory so it's accessible at runtime -->
+		<Content Include="Resources\water_drop.ico">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 </Project>
