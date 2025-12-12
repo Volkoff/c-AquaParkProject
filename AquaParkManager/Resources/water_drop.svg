@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Water drop shape -->
+  <defs>
+    <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#87CEEB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0099FF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Drop shadow -->
+  <ellipse cx="32" cy="58" rx="18" ry="4" fill="rgba(0,0,0,0.1)"/>
+  
+  <!-- Water drop -->
+  <path d="M 32 8 C 32 8, 20 24, 20 34 C 20 44.05, 25.37 52, 32 52 C 38.63 52, 44 44.05, 44 34 C 44 24, 32 8, 32 8 Z" 
+        fill="url(#waterGradient)" 
+        stroke="#0077CC" 
+        stroke-width="1.5"/>
+  
+  <!-- Highlight for depth -->
+  <ellipse cx="28" cy="24" rx="4" ry="6" fill="rgba(255,255,255,0.4)"/>
+</svg>

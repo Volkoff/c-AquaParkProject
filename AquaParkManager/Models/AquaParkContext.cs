@@ -52,9 +52,7 @@ namespace AquaParkManager.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Original hardcoded connection string (kept for fallback):
-            // optionsBuilder.UseOracle("User Id=st72504;Password=Sejmutvojihoe106;Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=fei-sql3.upceucebny.cz)(PORT=1521))(CONNECT_DATA=(SID=BDAS)))");
-
+            
             if (!string.IsNullOrWhiteSpace(App.ConnectionString))
             {
                 optionsBuilder.UseOracle(App.ConnectionString);

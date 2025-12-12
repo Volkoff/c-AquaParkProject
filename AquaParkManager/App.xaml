@@ -66,9 +66,10 @@
             </DrawingBrush.Drawing>
         </DrawingBrush>
 
-        <!-- Global Window Style to apply background -->
+        <!-- Global Window Style to apply background and icon -->
         <Style TargetType="Window">
             <Setter Property="Background" Value="{StaticResource AppBackgroundBrush}"/>
+            <Setter Property="Icon" Value="Resources/water_drop.ico"/>
         </Style>
     </Application.Resources>
 </Application>

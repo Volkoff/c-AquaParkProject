@@ -21,6 +21,9 @@
 		<Resource Include="Resources\pngimg.com - water_splash_PNG72.png">
 			<LogicalName>Resources/bg_img.png</LogicalName>
 		</Resource>
+		<Resource Include="Resources\water_drop.ico">
+			<LogicalName>Resources/water_drop.ico</LogicalName>
+		</Resource>
 	</ItemGroup>
 
 </Project>
