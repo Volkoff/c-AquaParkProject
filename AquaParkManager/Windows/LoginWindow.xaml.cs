@@ -37,7 +37,10 @@ namespace AquaParkManager.Windows
                         // Přihlášení úspěšné
                         App.CurrentUser = user; // Uložíme si uživatele
 
-                        MainWindow main = new MainWindow();
+                        var main = new MainWindow();
+                        // Ensure app lifetime follows the main window, not this login dialog
+                        Application.Current.MainWindow = main;
+                        Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
                         main.Show();
                         this.Close();
                     }

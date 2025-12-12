@@ -16,4 +16,11 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- Keep the original file name on disk but expose a clean logical name for pack URIs to avoid spaces. -->
+		<Resource Include="Resources\pngimg.com - water_splash_PNG72.png">
+			<LogicalName>Resources/bg_img.png</LogicalName>
+		</Resource>
+	</ItemGroup>
+
 </Project>
