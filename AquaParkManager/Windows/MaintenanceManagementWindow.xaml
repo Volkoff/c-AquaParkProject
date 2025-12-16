@@ -1,7 +1,7 @@
 <Window x:Class="AquaParkManager.Windows.MaintenanceManagementWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Maintenance Management" Height="500" Width="1000" WindowStartupLocation="CenterScreen" Background="{StaticResource AppBackgroundBrush}">
+        Title="Maintenance Management" Height="500" Width="1000" WindowStartupLocation="CenterScreen" Background="White">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

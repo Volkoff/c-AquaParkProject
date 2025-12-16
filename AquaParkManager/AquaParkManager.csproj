@@ -18,13 +18,11 @@
 
 	<ItemGroup>
 		<!-- Keep the original file name on disk but expose a clean logical name for pack URIs to avoid spaces. -->
-		<Resource Include="Resources\pngimg.com - water_splash_PNG72.png">
+		<Resource Include="Resources/pngimg.com - water_splash_PNG72.png">
 			<LogicalName>Resources/bg_img.png</LogicalName>
 		</Resource>
-		<!-- Icon file: copy to output directory so it's accessible at runtime -->
-		<Content Include="Resources\water_drop.ico">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+		<Resource Include="Resources/water_drop.ico" />
+		<!-- Make the ico a Resource so pack URIs in XAML work reliably -->
 	</ItemGroup>
 
 </Project>

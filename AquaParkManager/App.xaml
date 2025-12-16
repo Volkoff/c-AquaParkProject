@@ -48,28 +48,12 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,5"/>
         </Style>
-        <!-- App background brush: shared resource for all windows.
-             Use a DrawingBrush so we can draw a white rectangle underneath the image.
-             This ensures transparent or near-transparent parts of the PNG appear over white instead of black. -->
-        <DrawingBrush x:Key="AppBackgroundBrush" Stretch="UniformToFill" Opacity="0.08">
-            <DrawingBrush.Drawing>
-                <DrawingGroup>
-                    <!-- White base rectangle -->
-                    <GeometryDrawing Brush="White">
-                        <GeometryDrawing.Geometry>
-                            <RectangleGeometry Rect="0,0,1,1"/>
-                        </GeometryDrawing.Geometry>
-                    </GeometryDrawing>
-                    <!-- Background image overlay -->
-                    <ImageDrawing ImageSource="pack://application:,,,/AquaParkManager;component/Resources/bg_img.png" Rect="0,0,1,1"/>
-                </DrawingGroup>
-            </DrawingBrush.Drawing>
-        </DrawingBrush>
+        <!-- App background brush: Light background for all windows -->
+        <SolidColorBrush x:Key="AppBackgroundBrush" Color="White"/>
 
-        <!-- Global Window Style to apply background and icon -->
+        <!-- Global Window Style to apply background -->
         <Style TargetType="Window">
             <Setter Property="Background" Value="{StaticResource AppBackgroundBrush}"/>
-            <Setter Property="Icon" Value="Resources/water_drop.ico"/>
         </Style>
     </Application.Resources>
 </Application>
