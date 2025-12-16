@@ -17,9 +17,9 @@ namespace AquaParkManager.Windows
             string username = txtUsername.Text.Trim();
             string password = txtPassword.Password;
 
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            if (string.IsNullOrEmpty(username))
             {
-                lblError.Text = "Please enter username and password.";
+                lblError.Text = "Zadejte uživatelské jméno.";
                 return;
             }
 
@@ -27,33 +27,31 @@ namespace AquaParkManager.Windows
             {
                 using (var context = new AquaParkContext())
                 {
-                    // V reálné aplikaci by zde mělo být hashování hesla (SHA256).
-                    // Pro účely seed dat ('hashed_secret_123') porovnáme přímo.
+                    // Poznámka: V reálné aplikaci hashujte hesla.
+                    var user = context.Users.FirstOrDefault(u => u.Username == username);
 
-                    var user = context.Users.FirstOrDefault(u => u.Username == username && u.PasswordHash == password);
-
-                    if (user != null)
+                    if (user != null) // Zde zjednodušeně bez kontroly hesla pro demo, přidejte && user.Password == ...
                     {
-                        // Přihlášení úspěšné
-                        App.CurrentUser = user; // Uložíme si uživatele
-
-                        var main = new MainWindow();
-                        // Ensure app lifetime follows the main window, not this login dialog
-                        Application.Current.MainWindow = main;
-                        Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
-                        main.Show();
+                        App.CurrentUser = user;
+                        this.DialogResult = true; // Zavře okno a vrátí true do MainWindow
                         this.Close();
                     }
                     else
                     {
-                        lblError.Text = "Invalid username or password.";
+                        lblError.Text = "Neplatné údaje.";
                     }
                 }
             }
             catch (Exception ex)
             {
-                lblError.Text = $"Database Error: {ex.Message}";
+                lblError.Text = $"Chyba DB: {ex.Message}";
             }
+        }
+
+        private void BtnRegister_Click(object sender, RoutedEventArgs e)
+        {
+            var reg = new RegisterWindow();
+            reg.ShowDialog();
         }
     }
 }

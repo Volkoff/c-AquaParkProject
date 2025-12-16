@@ -6,40 +6,33 @@ namespace AquaParkManager
 {
     public partial class App : Application
     {
-        // Globální proměnná pro přihlášeného uživatele
-        public static User? CurrentUser { get; set; }
-        // Selected connection string provided at startup (set by ConnectionConfigWindow)
+        public static User? CurrentUser { get; set; } // Null = Neregistrovaný
         public static string? ConnectionString { get; set; }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            
-            // Prevent app from closing when dialogs close before MainWindow is set
+
+            // Zabrání vypnutí aplikace po zavření konfiguračního okna
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            
-            // Prompt for database connection before showing login
-            while (true)
+
+            var connectionWindow = new ConnectionConfigWindow();
+            if (connectionWindow.ShowDialog() != true)
             {
-                var connectionWindow = new ConnectionConfigWindow();
-                var result = connectionWindow.ShowDialog();
-
-                if (result == true && !string.IsNullOrWhiteSpace(ConnectionString))
-                {
-                    var login = new LoginWindow();
-                    login.Show();
-                    break;
-                }
-
-                if (result != true)
-                {
-                    // User cancelled; shut down gracefully
-                    Shutdown();
-                    break;
-                }
-
-                MessageBox.Show("Please provide a connection string to continue.");
+                Shutdown();
+                return;
             }
+
+            // Výchozí stav: Nepřihlášen
+            CurrentUser = null;
+
+            // Otevření hlavního okna
+            var main = new MainWindow();
+            Application.Current.MainWindow = main;
+            main.Show();
+
+            // Přepnutí režimu vypínání
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
         }
     }
 }

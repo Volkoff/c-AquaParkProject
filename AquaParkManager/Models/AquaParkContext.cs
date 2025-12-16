@@ -3,11 +3,15 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
 
 namespace AquaParkManager.Models
 {
     public class AquaParkContext : DbContext
     {
+        // Původní tabulky
         public DbSet<User> Users { get; set; }
         public DbSet<Staff> Staff { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -25,8 +29,6 @@ namespace AquaParkManager.Models
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Address> Address { get; set; }
         public DbSet<PostalCode> PostalCodes { get; set; }
-        
-        // Advanced Features
         public DbSet<Certification> Certifications { get; set; }
         public DbSet<Shift> Shifts { get; set; }
         public DbSet<StaffShift> StaffShifts { get; set; }
@@ -49,22 +51,21 @@ namespace AquaParkManager.Models
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Waiver> Waivers { get; set; }
         public DbSet<WeatherCondition> WeatherConditions { get; set; }
+        public DbSet<BookingOverview> BookingOverviews { get; set; }
+        public DbSet<DbObject> DbObjects { get; set; }
+        public DbSet<AreaHierarchy> AreaHierarchies { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            
             if (!string.IsNullOrWhiteSpace(App.ConnectionString))
             {
                 optionsBuilder.UseOracle(App.ConnectionString);
-            }
-            else
-            {
-                throw new InvalidOperationException("Connection string not set. Please configure the database connection before login.");
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Mapování tabulek
             modelBuilder.Entity<User>().ToTable("USERS");
             modelBuilder.Entity<Staff>().ToTable("STAFF");
             modelBuilder.Entity<Role>().ToTable("ROLES");
@@ -82,8 +83,6 @@ namespace AquaParkManager.Models
             modelBuilder.Entity<Payment>().ToTable("PAYMENTS");
             modelBuilder.Entity<Address>().ToTable("ADDRESS");
             modelBuilder.Entity<PostalCode>().ToTable("POSTAL_CODES");
-            
-            // Advanced Features
             modelBuilder.Entity<Certification>().ToTable("CERTIFICATIONS");
             modelBuilder.Entity<Shift>().ToTable("SHIFTS");
             modelBuilder.Entity<StaffShift>().ToTable("STAFF_SHIFTS");
@@ -106,9 +105,28 @@ namespace AquaParkManager.Models
             modelBuilder.Entity<UserRole>().ToTable("USER_ROLES");
             modelBuilder.Entity<Waiver>().ToTable("WAIVERS");
             modelBuilder.Entity<WeatherCondition>().ToTable("WEATHER_CONDITIONS");
-        }
+            modelBuilder.Entity<BookingOverview>(eb =>
+            {
+                eb.HasNoKey();
+                eb.ToView("V_BOOKING_OVERVIEW");
+            });
 
-        public override int SaveChanges()
+            modelBuilder.Entity<DbObject>(eb =>
+            {
+                eb.HasNoKey();
+                eb.ToView("V_DB_OBJECTS");
+            });
+
+            modelBuilder.Entity<AreaHierarchy>(eb =>
+            {
+                eb.HasNoKey();
+                eb.ToView("V_AREA_HIERARCHY");
+            });
+        }
+    
+
+
+public override int SaveChanges()
         {
             // Ponech�no beze zm�ny (Audit log logic)
             var entries = ChangeTracker.Entries()

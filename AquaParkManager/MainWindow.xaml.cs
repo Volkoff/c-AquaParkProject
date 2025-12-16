@@ -1,124 +1,101 @@
-﻿using System.Text;
+﻿using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using AquaParkManager.Models;
 using AquaParkManager.Windows;
+using Microsoft.EntityFrameworkCore;
 
 namespace AquaParkManager
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
+            ApplyRoles();
+        }
 
-            // Zobrazení jména v titulku nebo status baru
+        private void ApplyRoles()
+        {
+            bool isAdmin = false;
+
+            // Bezpečná kontrola CurrentUser
             if (App.CurrentUser != null)
             {
-                this.Title = $"Aqua Park Manager - Logged in as: {App.CurrentUser.Username}";
+                using (var ctx = new AquaParkContext())
+                {
+                    var roles = ctx.UserRoles.Include(ur => ur.Role)
+                                   .Where(ur => ur.UserId == App.CurrentUser.UserId)
+                                   .Select(ur => ur.Role != null ? ur.Role.RoleName : "")
+                                   .ToList();
+                    isAdmin = roles.Contains("ADMIN") || roles.Contains("MANAGER");
+                }
+            }
+
+            if (App.CurrentUser == null)
+            {
+                this.Title = "Aqua Park - Neregistrovaný návštěvník";
+                txtUserStatus.Text = "Prohlížíte jako host";
+
+                pnlAdminModules.Visibility = Visibility.Collapsed;
+                // Protože pnlAdminModules skrývá vše uvnitř, nemusíme skrývat jednotlivá tlačítka
+                btnLogin.Content = "Přihlásit se";
+            }
+            else
+            {
+                this.Title = $"Přihlášen: {App.CurrentUser.Username}" + (isAdmin ? " (ADMIN)" : "");
+                txtUserStatus.Text = $"Uživatel: {App.CurrentUser.Username}";
+                btnLogin.Content = "Odhlásit se";
+
+                pnlAdminModules.Visibility = Visibility.Visible;
+
+                // Tlačítka specifická pro Admina
+                btnUsers.Visibility = isAdmin ? Visibility.Visible : Visibility.Collapsed;
+
+                // DB Info vidí každý přihlášený (splnění bodu 30)
+                btnDbInfo.Visibility = Visibility.Visible;
             }
         }
 
-        // Přidej metodu pro Logout (např. na kliknutí tlačítka v menu)
-        private void BtnLogout_Click(object sender, RoutedEventArgs e)
+        private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
-            App.CurrentUser = null;
-            LoginWindow login = new LoginWindow();
-            login.Show();
-            this.Close();
+            if (App.CurrentUser == null)
+            {
+                var login = new LoginWindow();
+                if (login.ShowDialog() == true)
+                {
+                    // Refresh po přihlášení
+                    var newMain = new MainWindow();
+                    Application.Current.MainWindow = newMain;
+                    newMain.Show();
+                    this.Close();
+                }
+            }
+            else
+            {
+                App.CurrentUser = null;
+                var newMain = new MainWindow();
+                Application.Current.MainWindow = newMain;
+                newMain.Show();
+                this.Close();
+            }
         }
 
-        private void BtnStaff_Click(object sender, RoutedEventArgs e)
-        {
-            var staffWindow = new StaffManagementWindow();
-            staffWindow.ShowDialog();
-        }
+        // Navigace
+        private void BtnTickets_Click(object sender, RoutedEventArgs e) => new TicketsManagementWindow().ShowDialog();
+        private void BtnPools_Click(object sender, RoutedEventArgs e) => new PoolsManagementWindow().ShowDialog();
+        private void BtnSlides_Click(object sender, RoutedEventArgs e) => new SlidesManagementWindow().ShowDialog();
+        private void BtnBookings_Click(object sender, RoutedEventArgs e) => new BookingsManagementWindow().ShowDialog();
+        private void BtnStaff_Click(object sender, RoutedEventArgs e) => new StaffManagementWindow().ShowDialog();
+        private void BtnVisitors_Click(object sender, RoutedEventArgs e) => new VisitorsManagementWindow().ShowDialog();
+        private void BtnMaintenance_Click(object sender, RoutedEventArgs e) => new MaintenanceManagementWindow().ShowDialog();
+        private void BtnInventory_Click(object sender, RoutedEventArgs e) => new InventoryManagementWindow().ShowDialog();
+        private void BtnCertifications_Click(object sender, RoutedEventArgs e) => new CertificationsManagementWindow().ShowDialog();
+        private void BtnScheduling_Click(object sender, RoutedEventArgs e) => new SchedulingWindow().ShowDialog();
+        private void BtnReports_Click(object sender, RoutedEventArgs e) => new ReportsAnalyticsWindow().ShowDialog();
+        private void BtnMedia_Click(object sender, RoutedEventArgs e) => new MediaManagementWindow().ShowDialog();
 
-        private void BtnPools_Click(object sender, RoutedEventArgs e)
-        {
-            var poolsWindow = new PoolsManagementWindow();
-            poolsWindow.ShowDialog();
-        }
-
-        private void BtnSlides_Click(object sender, RoutedEventArgs e)
-        {
-            var slidesWindow = new SlidesManagementWindow();
-            slidesWindow.ShowDialog();
-        }
-
-        private void BtnVisitors_Click(object sender, RoutedEventArgs e)
-        {
-            var visitorsWindow = new VisitorsManagementWindow();
-            visitorsWindow.ShowDialog();
-        }
-
-        private void BtnTickets_Click(object sender, RoutedEventArgs e)
-        {
-            var ticketsWindow = new TicketsManagementWindow();
-            ticketsWindow.ShowDialog();
-        }
-
-        private void BtnBookings_Click(object sender, RoutedEventArgs e)
-        {
-            var bookingsWindow = new BookingsManagementWindow();
-            bookingsWindow.ShowDialog();
-        }
-
-
-        private void BtnMaintenance_Click(object sender, RoutedEventArgs e)
-        {
-            var maintenanceWindow = new MaintenanceManagementWindow();
-            maintenanceWindow.ShowDialog();
-        }
-
-        private void BtnCertifications_Click(object sender, RoutedEventArgs e)
-        {
-            var certificationsWindow = new CertificationsManagementWindow();
-            certificationsWindow.ShowDialog();
-        }
-
-        private void BtnInventory_Click(object sender, RoutedEventArgs e)
-        {
-            var inventoryWindow = new InventoryManagementWindow();
-            inventoryWindow.ShowDialog();
-        }
-
-        private void BtnScheduling_Click(object sender, RoutedEventArgs e)
-        {
-            var schedulingWindow = new SchedulingWindow();
-            schedulingWindow.ShowDialog();
-        }
-
-        private void BtnReports_Click(object sender, RoutedEventArgs e)
-        {
-            var reportsWindow = new ReportsAnalyticsWindow();
-            reportsWindow.ShowDialog();
-        }
-
-        private void BtnMedia_Click(object sender, RoutedEventArgs e)
-        {
-            var mediaWindow = new MediaManagementWindow();
-            mediaWindow.ShowDialog();
-        }
-        private void BtnSchedule_Click(object sender, RoutedEventArgs e)
-        {
-            var schedulingWindow = new SchedulingWindow();
-            schedulingWindow.ShowDialog();
-        }
-
-        private void BtnAnalytics_Click(object sender, RoutedEventArgs e)
-        {
-            var analyticsWindow = new ReportsAnalyticsWindow();
-            analyticsWindow.ShowDialog();
-        }
+        // Nová okna (musí existovat)
+        private void BtnUsers_Click(object sender, RoutedEventArgs e) => new UsersManagementWindow().ShowDialog();
+        private void BtnDbInfo_Click(object sender, RoutedEventArgs e) => new DatabaseObjectsWindow().ShowDialog();
     }
 }

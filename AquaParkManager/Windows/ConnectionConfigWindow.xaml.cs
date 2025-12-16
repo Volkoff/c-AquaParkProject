@@ -21,6 +21,8 @@ namespace AquaParkManager.Windows
 
             App.ConnectionString = connString;
             SelectedConnectionString = connString;
+
+            // Dùležité: Toto øekne App.xaml.cs, že se pøipojení povedlo
             DialogResult = true;
             Close();
         }
@@ -38,11 +40,19 @@ namespace AquaParkManager.Windows
 
             try
             {
+                // Doèasnì nastavíme pro test
+                var originalConn = App.ConnectionString;
                 App.ConnectionString = connString;
-                SelectedConnectionString = connString;
+
                 using var ctx = new AquaParkContext();
-                ctx.Database.CanConnect();
-                MessageBox.Show("Connection successful.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (ctx.Database.CanConnect())
+                {
+                    MessageBox.Show("Connection successful.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Connection failed (CanConnect returned false).", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
             catch (Exception ex)
             {
@@ -54,24 +64,10 @@ namespace AquaParkManager.Windows
         {
             connString = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(txtHost.Text))
+            if (string.IsNullOrWhiteSpace(txtHost.Text) || string.IsNullOrWhiteSpace(txtPort.Text) ||
+                string.IsNullOrWhiteSpace(txtSid.Text) || string.IsNullOrWhiteSpace(txtUser.Text))
             {
-                MessageBox.Show("Host is required.");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(txtPort.Text))
-            {
-                MessageBox.Show("Port is required.");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(txtSid.Text))
-            {
-                MessageBox.Show("SID is required.");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(txtUser.Text))
-            {
-                MessageBox.Show("User Id is required.");
+                MessageBox.Show("Please fill in Host, Port, SID and User.");
                 return false;
             }
 

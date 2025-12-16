@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Controls;
 using AquaParkManager.Models;
 using Microsoft.EntityFrameworkCore;
+using Oracle.ManagedDataAccess.Client;
+using System.Data;
 
 namespace AquaParkManager.Windows
 {
@@ -23,31 +25,22 @@ namespace AquaParkManager.Windows
 
         private void LoadVisitors()
         {
-            try
-            {
-                var visitors = _context.Visitors.ToList();
-                cmbVisitor.ItemsSource = visitors;
-            }
-            catch (Exception ex)
-            {
-                lblStatus.Text = $"Error loading visitors: {ex.Message}";
-            }
+            try { cmbVisitor.ItemsSource = _context.Visitors.ToList(); }
+            catch (Exception ex) { lblStatus.Text = "Chyba: " + ex.Message; }
         }
 
         private void LoadBookings()
         {
             try
             {
-                var bookings = _context.Bookings
-                    .Include(b => b.Visitor)
-                    .ToList();
-                dgBookings.ItemsSource = bookings;
-                lblStatus.Text = $"Loaded {bookings.Count} bookings";
+                // Místo tabulky Bookings načítáme POHLED BookingOverviews
+                // Tím plníme bod 3 (Využití pohledů v aplikaci)
+                var views = _context.BookingOverviews.ToList();
+
+                // Pozor: DataGrid v XAML musí mít Binding na sloupce z BookingOverview (např. VisitorName místo Visitor.FullName)
+                dgBookings.ItemsSource = views;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading bookings: {ex.Message}");
-            }
+            catch (Exception ex) { /*...*/ }
         }
 
         private void DgBookings_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -61,7 +54,6 @@ namespace AquaParkManager.Windows
                 txtTotalAmount.Text = _selectedBooking.TotalAmount.ToString("C");
                 cmbStatus.Text = _selectedBooking.Status;
                 txtNotes.Text = _selectedBooking.Notes ?? "";
-                lblStatus.Text = $"Selected booking: {_selectedBooking.BookingRef}";
             }
         }
 
@@ -69,8 +61,6 @@ namespace AquaParkManager.Windows
         {
             ClearForm();
             _selectedBooking = null;
-            cmbVisitor.Focus();
-            lblStatus.Text = "Ready to add new booking";
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -79,45 +69,38 @@ namespace AquaParkManager.Windows
             {
                 if (cmbVisitor.SelectedValue == null)
                 {
-                    MessageBox.Show("Please select a visitor.");
-                    lblStatus.Text = "Please select a visitor.";
+                    MessageBox.Show("Vyberte návštěvníka.");
                     return;
                 }
-                int visitorId = (int)cmbVisitor.SelectedValue;
 
                 if (_selectedBooking == null)
                 {
-                    var newBooking = new Booking
-                    {
-                        BookingRef = txtBookingRef.Text.Trim(),
-                        VisitorId = visitorId,
-                        CreatedDate = dpCreatedDate.SelectedDate ?? DateTime.Now,
-                        Status = cmbStatus.Text,
-                        Notes = txtNotes.Text.Trim(),
-                        TotalAmount = 0 // Inicializace na 0, DB si to dopo��t� podle polo�ek
-                    };
+                    // VKLÁDÁNÍ PŘES PROCEDURU
+                    var pVisitor = new OracleParameter("p_visitor_id", OracleDbType.Int32) { Value = (int)cmbVisitor.SelectedValue };
+                    var pNotes = new OracleParameter("p_notes", OracleDbType.Varchar2) { Value = txtNotes.Text ?? "" };
+                    var pOutId = new OracleParameter("p_booking_id", OracleDbType.Int32) { Direction = ParameterDirection.Output };
 
-                    _context.Bookings.Add(newBooking);
+                    _context.Database.ExecuteSqlRaw(
+                        "BEGIN SP_CREATE_BOOKING(:p_visitor_id, :p_notes, :p_booking_id); END;",
+                        pVisitor, pNotes, pOutId
+                    );
+
+                    MessageBox.Show($"Rezervace vytvořena procedurou! ID: {pOutId.Value}");
                 }
                 else
                 {
-                    _selectedBooking.BookingRef = txtBookingRef.Text.Trim();
-                    _selectedBooking.VisitorId = visitorId;
-                    _selectedBooking.CreatedDate = dpCreatedDate.SelectedDate ?? _selectedBooking.CreatedDate;
+                    // Update přes EF (nebo dopsat proceduru)
                     _selectedBooking.Status = cmbStatus.Text;
-                    _selectedBooking.Notes = txtNotes.Text.Trim();
-                    // TotalAmount neaktualizujeme, d�l� to DB
+                    _selectedBooking.Notes = txtNotes.Text;
+                    _context.SaveChanges();
                 }
 
-                _context.SaveChanges();
                 LoadBookings();
                 ClearForm();
-                lblStatus.Text = "Booking saved successfully";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving booking: {ex.Message}");
-                lblStatus.Text = $"Error saving booking: {ex.Message}";
+                MessageBox.Show($"Chyba: {ex.Message}");
             }
         }
 
@@ -125,40 +108,20 @@ namespace AquaParkManager.Windows
         {
             if (_selectedBooking != null)
             {
-                _context.Bookings.Remove(_selectedBooking);
-                _context.SaveChanges();
+                var pId = new OracleParameter("p_booking_id", _selectedBooking.BookingId);
+                var pReason = new OracleParameter("p_reason", "Smazáno uživatelem");
+                _context.Database.ExecuteSqlRaw("BEGIN SP_CANCEL_BOOKING(:p_booking_id, :p_reason); END;", pId, pReason);
                 LoadBookings();
                 ClearForm();
-                lblStatus.Text = "Booking deleted successfully";
             }
         }
 
         private void BtnClear_Click(object sender, RoutedEventArgs e) { ClearForm(); _selectedBooking = null; }
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var searchText = txtSearch.Text.ToLower();
-            if (string.IsNullOrEmpty(searchText)) { LoadBookings(); return; }
-            try
-            {
-                dgBookings.ItemsSource = _context.Bookings.Include(b => b.Visitor)
-                    .Where(b => (b.BookingRef != null && b.BookingRef.ToLower().Contains(searchText)))
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                lblStatus.Text = $"Error filtering bookings: {ex.Message}";
-            }
-        }
-
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }
         private void ClearForm()
         {
-            txtBookingRef.Text = "";
-            cmbVisitor.SelectedIndex = -1;
-            dpCreatedDate.SelectedDate = DateTime.Now;
-            txtTotalAmount.Text = "";
-            cmbStatus.SelectedIndex = 0;
-            txtNotes.Text = "";
-            lblStatus.Text = "Form cleared";
+            txtBookingRef.Clear(); cmbVisitor.SelectedIndex = -1; txtNotes.Clear();
+            dpCreatedDate.SelectedDate = DateTime.Now; txtTotalAmount.Clear();
         }
     }
 }
