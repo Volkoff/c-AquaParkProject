@@ -53,7 +53,7 @@
                         <ComboBox x:Name="cmbBooking" Margin="0,0,0,10" DisplayMemberPath="BookingRef" SelectedValuePath="BookingId"/>
 
                         <TextBlock Text="Ticket Type:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <ComboBox x:Name="cmbTicketType" Margin="0,0,0,10"/>
+                        <ComboBox x:Name="cmbTicketType" Margin="0,0,0,10" DisplayMemberPath="Name" SelectedValuePath="TicketTypeId" SelectionChanged="CmbTicketType_SelectionChanged"/>
 
                         <TextBlock Text="Quantity:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtQuantity" Text="1" Margin="0,0,0,10"/>

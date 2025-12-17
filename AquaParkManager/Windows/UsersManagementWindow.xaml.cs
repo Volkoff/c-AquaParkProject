@@ -26,17 +26,22 @@ namespace AquaParkManager.Windows
             {
                 if (MessageBox.Show($"Opravdu se chcete přepnout na uživatele {selectedUser.Username}?", "Emulace", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    // EMULACE UŽIVATELE
+                    // Save current admin user
+                    App.AdminUser = App.CurrentUser;
+                    
+                    // Switch to emulated user
                     App.CurrentUser = selectedUser;
-                    MessageBox.Show($"Nyní jste přihlášen jako: {selectedUser.Username}");
-
+                    App.IsEmulated = true;
+                    
+                    MessageBox.Show($"Nyní jste v emulaci jako: {selectedUser.Username}\n\nKlikněte na tlačítko 'Vrátit se na ADMIN' pro návrat.", "Emulace aktivní");
+                    
                     // Restart hlavního okna pro aplikaci práv
+                    var oldMain = Application.Current.MainWindow;
                     var newMain = new MainWindow();
-                    Application.Current.MainWindow.Close();
+                    
                     Application.Current.MainWindow = newMain;
+                    oldMain.Close();
                     newMain.Show();
-
-                    this.Close();
                 }
             }
         }

@@ -19,8 +19,85 @@ namespace AquaParkManager.Windows
             InitializeComponent();
             _context = new AquaParkContext();
             LoadVisitors();
+            LoadTicketTypes();
             LoadBookings();
             ClearForm();
+            ApplyPermissions(); // Apply role-based access control
+            
+            // Refresh data when window is activated (brought to focus)
+            this.Activated += (s, e) => LoadBookings();
+        }
+
+        private void ApplyPermissions()
+        {
+            if (App.CurrentUser == null)
+            {
+                // === GUEST MODE ===
+                this.Title += " - Prohlížení (Host)";
+                btnAddBooking.Visibility = Visibility.Collapsed;
+                btnSave.Visibility = Visibility.Collapsed;
+                btnDelete.Visibility = Visibility.Collapsed;
+                btnClear.Visibility = Visibility.Collapsed;
+
+                cmbVisitor.IsEnabled = false;
+                cmbStatus.IsEnabled = false;
+                txtNotes.IsReadOnly = true;
+                dpCreatedDate.IsEnabled = false;
+                
+                lblStatus.Text = "Host: Prohlížíte dostupné rezervace (čtení).";
+            }
+            else
+            {
+                // Check if user is staff/admin
+                bool isStaff = false;
+                using (var ctx = new AquaParkContext())
+                {
+                    var userRoles = ctx.UserRoles.Include(ur => ur.Role)
+                        .Where(ur => ur.UserId == App.CurrentUser.UserId)
+                        .Select(ur => ur.Role != null ? ur.Role.RoleName : "")
+                        .ToList();
+                    isStaff = userRoles.Contains("ADMIN") || userRoles.Contains("MANAGER") || userRoles.Contains("STAFF");
+                }
+
+                if (!isStaff)
+                {
+                    // === VISITOR (NON-STAFF) MODE ===
+                    this.Title += " - Moje rezervace";
+                    btnAddBooking.Visibility = Visibility.Visible;
+                    btnSave.Visibility = Visibility.Visible;
+                    btnDelete.Visibility = Visibility.Visible;
+                    btnClear.Visibility = Visibility.Visible;
+
+                    cmbVisitor.IsEnabled = false;  // Auto-select their own visitor record
+                    cmbStatus.IsEnabled = false;   // Can't change status
+                    txtNotes.IsReadOnly = false;
+                    dpCreatedDate.IsEnabled = false;
+                    
+                    // Show ticket creation fields for visitors
+                    cmbTicketType.IsEnabled = true;
+                    txtTicketQuantity.IsReadOnly = false;
+                    dpReservationDate.IsEnabled = true;
+                    txtReservationTime.IsReadOnly = false;
+
+                    lblStatus.Text = "Návštěvník: Vytvářejte a spravujte své vlastní rezervace s vstupenkami.";
+                }
+                else
+                {
+                    // === STAFF/ADMIN MODE ===
+                    this.Title += " - Správa";
+                    btnAddBooking.Visibility = Visibility.Visible;
+                    btnSave.Visibility = Visibility.Visible;
+                    btnDelete.Visibility = Visibility.Visible;
+                    btnClear.Visibility = Visibility.Visible;
+
+                    cmbVisitor.IsEnabled = true;
+                    cmbStatus.IsEnabled = true;
+                    txtNotes.IsReadOnly = false;
+                    dpCreatedDate.IsEnabled = true;
+
+                    lblStatus.Text = "Zaměstnanec: Úplný přístup na správu rezervací.";
+                }
+            }
         }
 
         private void LoadVisitors()
@@ -29,18 +106,42 @@ namespace AquaParkManager.Windows
             catch (Exception ex) { lblStatus.Text = "Chyba: " + ex.Message; }
         }
 
+        private void LoadTicketTypes()
+        {
+            try { cmbTicketType.ItemsSource = _context.TicketTypes.ToList(); }
+            catch (Exception ex) { lblStatus.Text = "Chyba při načítání typů vstupenek: " + ex.Message; }
+        }
+
         private void LoadBookings()
         {
             try
             {
-                // Místo tabulky Bookings načítáme POHLED BookingOverviews
-                // Tím plníme bod 3 (Využití pohledů v aplikaci)
-                var views = _context.BookingOverviews.ToList();
+                // Check if user is staff
+                bool isStaff = false;
+                if (App.CurrentUser != null)
+                {
+                    var userRoles = _context.UserRoles.Include(ur => ur.Role)
+                        .Where(ur => ur.UserId == App.CurrentUser.UserId)
+                        .Select(ur => ur.Role != null ? ur.Role.RoleName : "")
+                        .ToList();
+                    isStaff = userRoles.Contains("ADMIN") || userRoles.Contains("MANAGER") || userRoles.Contains("STAFF");
+                }
 
-                // Pozor: DataGrid v XAML musí mít Binding na sloupce z BookingOverview (např. VisitorName místo Visitor.FullName)
-                dgBookings.ItemsSource = views;
+                // Load fresh bookings from database
+                var bookings = _context.Bookings.Include(b => b.Visitor).ToList();
+
+                // Filter by current user if not staff
+                if (App.CurrentUser != null && !isStaff && App.CurrentUser.VisitorId.HasValue)
+                {
+                    bookings = bookings.Where(b => b.VisitorId == App.CurrentUser.VisitorId.Value).ToList();
+                }
+
+                // Refresh the DataGrid binding
+                dgBookings.ItemsSource = null;
+                dgBookings.ItemsSource = bookings;
+                lblStatus.Text = $"Načteno {bookings.Count} rezervací.";
             }
-            catch (Exception ex) { /*...*/ }
+            catch (Exception ex) { lblStatus.Text = "Chyba: " + ex.Message; }
         }
 
         private void DgBookings_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -75,24 +176,96 @@ namespace AquaParkManager.Windows
 
                 if (_selectedBooking == null)
                 {
-                    // VKLÁDÁNÍ PŘES PROCEDURU
-                    var pVisitor = new OracleParameter("p_visitor_id", OracleDbType.Int32) { Value = (int)cmbVisitor.SelectedValue };
-                    var pNotes = new OracleParameter("p_notes", OracleDbType.Varchar2) { Value = txtNotes.Text ?? "" };
-                    var pOutId = new OracleParameter("p_booking_id", OracleDbType.Int32) { Direction = ParameterDirection.Output };
+                    // Creating NEW reservation with automatic ticket creation
+                    int visitorId = (int)cmbVisitor.SelectedValue;
 
-                    _context.Database.ExecuteSqlRaw(
-                        "BEGIN SP_CREATE_BOOKING(:p_visitor_id, :p_notes, :p_booking_id); END;",
-                        pVisitor, pNotes, pOutId
-                    );
+                    // For visitors, auto-set their own visitor ID
+                    bool isStaff = false;
+                    if (App.CurrentUser != null)
+                    {
+                        var userRoles = _context.UserRoles.Include(ur => ur.Role)
+                            .Where(ur => ur.UserId == App.CurrentUser.UserId)
+                            .Select(ur => ur.Role != null ? ur.Role.RoleName : "")
+                            .ToList();
+                        isStaff = userRoles.Contains("ADMIN") || userRoles.Contains("MANAGER") || userRoles.Contains("STAFF");
+                    }
 
-                    MessageBox.Show($"Rezervace vytvořena procedurou! ID: {pOutId.Value}");
+                    if (!isStaff && App.CurrentUser?.VisitorId.HasValue == true)
+                    {
+                        visitorId = App.CurrentUser.VisitorId.Value;
+                    }
+
+                    // Create the booking
+                    var newBooking = new Booking
+                    {
+                        VisitorId = visitorId,
+                        BookingRef = $"BOOK-{DateTime.Now:yyyyMMddHHmmss}",
+                        CreatedDate = DateTime.Now,
+                        Status = "PENDING",
+                        Notes = txtNotes.Text ?? "",
+                        TotalAmount = 0
+                    };
+                    _context.Bookings.Add(newBooking);
+                    _context.SaveChanges();
+
+                    // Auto-create tickets if ticket type and quantity are specified
+                    if (cmbTicketType.SelectedValue != null && !string.IsNullOrWhiteSpace(txtTicketQuantity.Text))
+                    {
+                        if (int.TryParse(txtTicketQuantity.Text, out int quantity) && quantity > 0)
+                        {
+                            int ticketTypeId = (int)cmbTicketType.SelectedValue;
+
+                            // Get the price for this ticket type
+                            var priceItem = _context.PriceListItems
+                                .Where(pli => pli.TicketTypeId == ticketTypeId &&
+                                              pli.ValidFrom <= DateTime.Now &&
+                                              (pli.ValidTo == null || pli.ValidTo >= DateTime.Now))
+                                .FirstOrDefault();
+
+                            decimal unitPrice = priceItem?.UnitPrice ?? 0;
+
+                            // Create booking items (tickets)
+                            for (int i = 0; i < quantity; i++)
+                            {
+                                var bookingItem = new BookingItem
+                                {
+                                    BookingId = newBooking.BookingId,
+                                    TicketTypeId = ticketTypeId,
+                                    Quantity = 1,
+                                    UnitPrice = unitPrice
+                                };
+                                _context.BookingItems.Add(bookingItem);
+                            }
+                            _context.SaveChanges();
+
+                            MessageBox.Show($"Rezervace vytvořena! {quantity} vstupenek přidáno.");
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Rezervace vytvořena!");
+                    }
                 }
                 else
                 {
-                    // Update přes EF (nebo dopsat proceduru)
-                    _selectedBooking.Status = cmbStatus.Text;
+                    // Update existing booking (non-staff only)
+                    bool isStaff = false;
+                    if (App.CurrentUser != null)
+                    {
+                        var userRoles = _context.UserRoles.Include(ur => ur.Role)
+                            .Where(ur => ur.UserId == App.CurrentUser.UserId)
+                            .Select(ur => ur.Role != null ? ur.Role.RoleName : "")
+                            .ToList();
+                        isStaff = userRoles.Contains("ADMIN") || userRoles.Contains("MANAGER") || userRoles.Contains("STAFF");
+                    }
+
+                    if (isStaff)
+                    {
+                        _selectedBooking.Status = cmbStatus.Text;
+                    }
                     _selectedBooking.Notes = txtNotes.Text;
                     _context.SaveChanges();
+                    MessageBox.Show("Rezervace aktualizována!");
                 }
 
                 LoadBookings();
@@ -120,8 +293,23 @@ namespace AquaParkManager.Windows
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) { }
         private void ClearForm()
         {
-            txtBookingRef.Clear(); cmbVisitor.SelectedIndex = -1; txtNotes.Clear();
-            dpCreatedDate.SelectedDate = DateTime.Now; txtTotalAmount.Clear();
+            txtBookingRef.Clear();
+            cmbVisitor.SelectedIndex = -1;
+            txtNotes.Clear();
+            dpCreatedDate.SelectedDate = DateTime.Now;
+            txtTotalAmount.Clear();
+            cmbStatus.SelectedIndex = 0; // CONFIRMED
+            dpReservationDate.SelectedDate = DateTime.Now;
+            txtReservationTime.Clear();
+            cmbTicketType.SelectedIndex = -1;
+            txtTicketQuantity.Text = "1";
+            _selectedBooking = null;
+
+            // Pre-fill visitor for non-staff users
+            if (App.CurrentUser?.VisitorId.HasValue == true)
+            {
+                cmbVisitor.SelectedValue = App.CurrentUser.VisitorId;
+            }
         }
     }
 }

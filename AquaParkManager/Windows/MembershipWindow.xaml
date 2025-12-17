@@ -1,0 +1,118 @@
+<Window x:Class="AquaParkManager.Windows.MembershipWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nákup Členství" Height="600" Width="700" WindowStartupLocation="CenterScreen" Background="White">
+    <Window.Resources>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#FFE0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+        </Style>
+        <Style x:Key="HeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#FF2E86AB"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#FF2E86AB" Padding="30">
+            <StackPanel>
+                <TextBlock Text="💳 Nákup Členství" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Vyberte si typ členství a sledujte své sleva a výhody" FontSize="12" Foreground="#EEE" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="30">
+                <!-- Membership Types -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="📋 Typ Členství" Style="{StaticResource HeaderStyle}"/>
+                        <ItemsControl x:Name="icMemberships" Background="Transparent">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="White" BorderBrush="#FFE0E0E0" BorderThickness="1" Padding="15" Margin="0,0,0,10" CornerRadius="5" Cursor="Hand" PreviewMouseDown="Border_PreviewMouseDown">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Radio Button -->
+                                            <RadioButton Grid.Column="0" VerticalAlignment="Center" Margin="0,0,15,0" x:Name="rbMembership" Tag="{Binding}" GroupName="MembershipGroup" Checked="RbMembership_Checked"/>
+
+                                            <!-- Membership Info -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold" Foreground="#FF2E86AB"/>
+                                                <TextBlock Text="{Binding Description}" FontSize="12" Foreground="Gray" Margin="0,3,0,0"/>
+                                            </StackPanel>
+
+                                            <!-- Price -->
+                                            <TextBlock Grid.Column="2" Text="{Binding Price}" FontSize="16" FontWeight="Bold" Foreground="Green" VerticalAlignment="Center" TextAlignment="Right"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Duration -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="📅 Doba Platnosti" Style="{StaticResource HeaderStyle}"/>
+                        <TextBlock Text="Měsíce:" FontSize="12" Foreground="Gray" Margin="0,0,0,5"/>
+                        <Slider x:Name="sliderMonths" Minimum="1" Maximum="12" Value="1" Margin="0,0,0,10" Background="#FFF8F9FA"/>
+                        <TextBlock x:Name="lblMonthsDisplay" Text="1 měsíc" FontSize="13" FontWeight="Bold" Foreground="#FF2E86AB"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Summary -->
+                <Border Style="{StaticResource CardStyle}" Background="#FFF0F8FF">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="📊 Souhrn Nákupu" Style="{StaticResource HeaderStyle}"/>
+                            <TextBlock x:Name="lblMembershipSelected" Text="Typu: Nebylo vybráno" FontSize="13" Margin="0,5,0,3"/>
+                            <TextBlock x:Name="lblDurationSelected" Text="Doba: 1 měsíc" FontSize="13" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="lblTotalPrice" Text="Cena celkem: 0 Kč" FontSize="16" FontWeight="Bold" Foreground="Green"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Cena:" FontSize="12" Foreground="Gray" TextAlignment="Right"/>
+                            <TextBlock x:Name="lblBigPrice" Text="0 Kč" FontSize="24" FontWeight="Bold" Foreground="#FF2E86AB" TextAlignment="Right"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <TextBlock x:Name="lblStatus" Text="" Foreground="Green" FontSize="12" Margin="0,10,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Bottom Buttons -->
+        <Border Grid.Row="2" Background="#FFF8F9FA" BorderBrush="#FFE0E0E0" BorderThickness="0,1,0,0" Padding="30">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="btnPurchase" Content="✅ Koupit Členství" Click="BtnPurchase_Click" Background="#FF28A745" Padding="25,12" FontSize="14" FontWeight="Bold" Foreground="White" Cursor="Hand" Margin="0,0,10,0" IsEnabled="False"/>
+                <Button Content="❌ Zrušit" Click="BtnCancel_Click" Background="#FFC3E1FA" Foreground="#FF2E86AB" Padding="20,12" FontSize="14"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

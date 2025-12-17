@@ -33,12 +33,24 @@ namespace AquaParkManager.Windows
         private bool IsUserAdmin()
         {
             if (App.CurrentUser == null) return false;
+            
             using (var ctx = new AquaParkContext())
             {
                 var roles = ctx.UserRoles.Include(ur => ur.Role)
                                .Where(ur => ur.UserId == App.CurrentUser.UserId)
                                .Select(ur => ur.Role.RoleName).ToList();
-                return roles.Contains("ADMIN") || roles.Contains("MANAGER");
+                
+                bool isAdmin = roles.Contains("ADMIN") || roles.Contains("MANAGER");
+                bool isStaff = isAdmin || roles.Contains("STAFF");
+                
+                // If no roles found, check if user is linked to a Staff record
+                if (roles.Count == 0 && App.CurrentUser.StaffId.HasValue)
+                {
+                    isStaff = true;
+                    isAdmin = true;
+                }
+                
+                return isStaff;
             }
         }
 

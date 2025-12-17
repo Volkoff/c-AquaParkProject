@@ -12,7 +12,7 @@ namespace AquaParkManager.Windows
     {
         private AquaParkContext _context;
         private Certification? _selectedCertification;
-        // Helper to avoid direct dependence on generated lblStatus field (sometimes XAML partial class not present at compile-time)
+        
         private void SetStatus(string text)
         {
             try
