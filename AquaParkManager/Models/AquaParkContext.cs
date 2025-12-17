@@ -209,7 +209,7 @@ public override int SaveChanges()
     }
 
     [Table("STAFF")]
-    public class Staff : AuditableEntity
+    public class Staff
     {
         [Key][Column("STAFF_ID")] public int StaffId { get; set; }
         [Column("FIRST_NAME")] public string FirstName { get; set; } = string.Empty;
@@ -220,8 +220,10 @@ public override int SaveChanges()
         [Column("HIRE_DATE")] public DateTime HireDate { get; set; } = DateTime.Now;
         [Column("NOTES")] public string? Notes { get; set; }
         [Column("ACTIVE")] public string Active { get; set; } = "Y";
+
         [Column("ADDRESS_ADDRESS_ID")] public int AddressId { get; set; }
         [ForeignKey("AddressId")] public virtual Address? Address { get; set; }
+
         [NotMapped] public string FullName => $"{FirstName} {LastName}";
     }
 
@@ -404,7 +406,7 @@ public override int SaveChanges()
     }
 
     [Table("SHIFTS")]
-    public class Shift : AuditableEntity
+    public class Shift
     {
         [Key][Column("SHIFT_ID")] public int ShiftId { get; set; }
         [Column("SHIFT_NAME")] public string? ShiftName { get; set; }
@@ -414,13 +416,14 @@ public override int SaveChanges()
     }
 
     [Table("STAFF_SHIFTS")]
-    public class StaffShift : AuditableEntity
+    public class StaffShift
     {
         [Key][Column("STAFF_SHIFT_ID")] public int StaffShiftId { get; set; }
         [Column("STAFF_STAFF_ID")] public int StaffId { get; set; }
         [Column("SHIFTS_SHIFT_ID")] public int ShiftId { get; set; }
         [Column("SHIFT_DATE")] public DateTime ShiftDate { get; set; }
         [Column("ASSIGNED_AT")] public DateTime AssignedAt { get; set; } = DateTime.Now;
+
         [ForeignKey("StaffId")] public virtual Staff? Staff { get; set; }
         [ForeignKey("ShiftId")] public virtual Shift? Shift { get; set; }
     }

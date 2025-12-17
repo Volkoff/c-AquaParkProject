@@ -69,15 +69,10 @@ namespace AquaParkManager
                     this.Title = "Aqua Park - Host";
                     txtUserStatus.Text = "Prohlížíte jako host (zakupte si vstupenku nebo se zaregistrujte)";
 
-                    // Guests see public options: Tickets, Pools, Slides, Bookings (for purchases)
-                    btnTickets.Visibility = Visibility.Visible;
-                    btnPools.Visibility = Visibility.Visible;
-                    btnSlides.Visibility = Visibility.Visible;
-                    btnBookings.Visibility = Visibility.Visible;  // For guest to purchase/book
+                    btnTickets.Visibility = Visibility.Collapsed;     // Host nekupuje "Items", kupuje přes Bookings
+                    btnBookings.Visibility = Visibility.Collapsed;    // Host nevidí správu rezervací
+                    btnMembership.Visibility = Visibility.Collapsed;
 
-                    // Hide ALL staff/management modules
-                    pnlAdminModules.Visibility = Visibility.Collapsed;
-                    
                     btnLogin.Content = "Přihlásit se / Registrace";
                 }
                 else if (!isStaff)
@@ -153,7 +148,23 @@ namespace AquaParkManager
         }
 
         // Navigace
-        private void BtnTickets_Click(object sender, RoutedEventArgs e) => new TicketsManagementWindow().ShowDialog();
+        private void BtnTickets_Click(object sender, RoutedEventArgs e)
+        {
+            bool isStaff = false;
+            // ... (zde ponechte vaši logiku zjištění role, která tam už je) ...
+            // Pokud ji tam nemáte, zkopírujte ji z ApplyRoles
+
+            if (isStaff)
+            {
+                // Zaměstnanec spravuje ceník
+                new TicketsManagementWindow().ShowDialog();
+            }
+            else
+            {
+                // Zákazník (i registrovaný) nakupuje
+                new GuestBookingWindow().ShowDialog();
+            }
+        }
         private void BtnPools_Click(object sender, RoutedEventArgs e) => new PoolsManagementWindow().ShowDialog();
         private void BtnSlides_Click(object sender, RoutedEventArgs e) => new SlidesManagementWindow().ShowDialog();
         

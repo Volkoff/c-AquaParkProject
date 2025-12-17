@@ -53,11 +53,11 @@
                         <TextBlock Text="Slide Name:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtName" Margin="0,0,0,10"/>
 
-                        <TextBlock Text="Slide Type:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <ComboBox x:Name="cmbSlideType" Margin="0,0,0,10"/>
+                        <ComboBox x:Name="cmbSlideType" Margin="0,0,0,10" 
+                                  DisplayMemberPath="Name" SelectedValuePath="SlideTypeId"/>
 
-                        <TextBlock Text="Location (Pool/Area):" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <ComboBox x:Name="cmbPool" Margin="0,0,0,10"/>
+                        <ComboBox x:Name="cmbPool" Margin="0,0,0,10" 
+                                  DisplayMemberPath="Name" SelectedValuePath="PoolId"/>
 
                         <TextBlock Text="Status:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <ComboBox x:Name="cmbStatus" Margin="0,0,0,15">

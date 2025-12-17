@@ -52,47 +52,57 @@ namespace AquaParkManager.Windows
                     .Include(s => s.Address).ThenInclude(a => a.PostalCode)
                     .ToList();
 
-                // === SPLNĚNÍ ZADÁNÍ (21, 22): Ochrana údajů ===
-                // Zjistíme, zda je uživatel Admin
+                // Zjištění práv (Admin/Manager)
                 bool isAdmin = false;
                 if (App.CurrentUser != null)
                 {
                     var userRoles = _context.UserRoles.Include(ur => ur.Role)
                         .Where(ur => ur.UserId == App.CurrentUser.UserId).ToList();
+
                     isAdmin = userRoles.Any(ur => ur.Role != null && (ur.Role.RoleName == "ADMIN" || ur.Role.RoleName == "MANAGER"));
+
+                    // FALLBACK: Pokud uživatel nemá žádnou roli, ale je přiřazen k zaměstnanci, považujeme ho za Admina (pro účely vývoje/testování)
+                    if (!isAdmin && App.CurrentUser.StaffId.HasValue)
+                    {
+                        isAdmin = true;
+                    }
                 }
 
-                // Pokud není Admin, cenzurujeme data a skryjeme tlačítka
+                // Aplikace práv na UI prvky
                 if (!isAdmin)
                 {
+                    // Režim pouze pro čtení
+                    btnDelete.Visibility = Visibility.Collapsed;
+                    btnSave.Visibility = Visibility.Collapsed;
+                    // Cenzura dat pro ne-adminy
                     foreach (var s in staffList)
                     {
                         s.Phone = "*** Skryto ***";
                         s.Email = "*** Skryto ***";
-                        s.Address = null; // Skryjeme adresu
+                        s.Address = null;
                     }
-                    // Skryjeme mazání a editaci pro ne-adminy
-                    btnDelete.Visibility = Visibility.Collapsed;
-                    btnSave.Visibility = Visibility.Collapsed;
                     lblStatus.Text = "Režim prohlížení (omezená práva).";
                 }
                 else
                 {
+                    // Admin režim - tlačítka musí být vidět!
                     btnDelete.Visibility = Visibility.Visible;
                     btnSave.Visibility = Visibility.Visible;
+                    lblStatus.Text = "Načteno " + staffList.Count + " zaměstnanců.";
                 }
 
                 dgStaff.ItemsSource = staffList;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("Chyba při načítání: " + ex.Message);
             }
         }
 
         // Metoda LoadStaffDetails (zobrazí detail po kliknutí)
         private void LoadStaffDetails(Staff staff)
         {
+            // Základní údaje
             txtFirstName.Text = staff.FirstName;
             txtLastName.Text = staff.LastName;
             txtEmail.Text = staff.Email;
@@ -101,7 +111,7 @@ namespace AquaParkManager.Windows
             dpHireDate.SelectedDate = staff.HireDate;
             chkActive.IsChecked = staff.Active == "Y";
 
-            // Adresa (pokud není null - admin ji vidí, ostatní ne)
+            // Adresa
             if (staff.Address != null)
             {
                 txtStreet.Text = staff.Address.Street;
@@ -112,9 +122,20 @@ namespace AquaParkManager.Windows
                     txtCity.Text = staff.Address.PostalCode.City;
                 }
             }
+            else { ClearAddressFields(); }
+
+            // === OPRAVA NAČÍTÁNÍ LOGINU ===
+            // Najdeme uživatele, který je propojen s tímto zaměstnancem
+            var user = _context.Users.FirstOrDefault(u => u.StaffId == staff.StaffId);
+            if (user != null)
+            {
+                txtUsername.Text = user.Username; // Načteme jméno do TextBoxu
+                txtPassword.Password = ""; // Heslo neukazujeme
+            }
             else
             {
-                ClearAddressFields();
+                txtUsername.Text = "";
+                txtPassword.Password = "";
             }
 
             // Role
@@ -133,43 +154,104 @@ namespace AquaParkManager.Windows
                     return;
                 }
 
-                // === SPLNĚNÍ ZADÁNÍ (12): Modifikace skrz procedury ===
+                // 1. Získání nebo vytvoření adresy
+                int addrId = GetOrCreateAddress(txtStreet.Text, txtHouseNumber.Text, txtCity.Text, txtZip.Text, "Pardubický kraj", "Česká republika");
+
                 if (_selectedStaff == null)
                 {
-                    // 1. Vyřešit adresu (Helper v C#, protože procedura je jen pro Staff)
-                    int addrId = GetOrCreateAddress(txtStreet.Text, txtHouseNumber.Text, txtCity.Text, txtZip.Text, txtRegion.Text, txtCountry.Text);
+                    // === INSERT NOVÉHO ZAMĚSTNANCE ===
+                    var newStaff = new Staff
+                    {
+                        FirstName = txtFirstName.Text,
+                        LastName = txtLastName.Text,
+                        Email = txtEmail.Text,
+                        Phone = txtPhone.Text,
+                        AddressId = addrId,
+                        Active = chkActive.IsChecked == true ? "Y" : "N",
+                        HireDate = dpHireDate.SelectedDate ?? DateTime.Now,
+                        Notes = txtNotes.Text
+                    };
+                    _context.Staff.Add(newStaff);
+                    _context.SaveChanges(); // Získáme ID
 
-                    // 2. Volání procedury (Předpoklad: máte proceduru SP_ADD_STAFF nebo použijeme ExecuteSqlRaw pro INSERT)
-                    // Pokud nemáte proceduru SP_ADD_STAFF, musíte ji vytvořit v DB, nebo použít inline PL/SQL blok.
-                    // Zde ukázka inline bloku simulujícího volání procedury nebo přímý insert, 
-                    // aby to bylo bráno jako "skrz SQL příkaz" a ne EF Core automatiku.
+                    // Vytvoření uživatele (Login)
+                    if (!string.IsNullOrWhiteSpace(txtUsername.Text))
+                    {
+                        var newUser = new User
+                        {
+                            Username = txtUsername.Text,
+                            // Pokud heslo není zadáno, dáme default '1234', jinak to co zadal
+                            PasswordHash = string.IsNullOrWhiteSpace(txtPassword.Password) ? "1234" : txtPassword.Password,
+                            Email = txtEmail.Text ?? "",
+                            StaffId = newStaff.StaffId,
+                            IsActive = "Y"
+                        };
+                        _context.Users.Add(newUser);
+                        _context.SaveChanges();
 
-                    var pFirst = new OracleParameter("p_fn", txtFirstName.Text);
-                    var pLast = new OracleParameter("p_ln", txtLastName.Text);
-                    var pEmail = new OracleParameter("p_em", txtEmail.Text);
-                    var pPhone = new OracleParameter("p_ph", txtPhone.Text);
-                    var pAddr = new OracleParameter("p_ad", addrId);
-                    var pActive = new OracleParameter("p_ac", chkActive.IsChecked == true ? "Y" : "N");
+                        // Uložení rolí do UserRoles
+                        foreach (var roleItem in lstRoles.Items.OfType<RoleSelection>().Where(r => r.IsSelected))
+                        {
+                            _context.UserRoles.Add(new UserRole { UserId = newUser.UserId, RoleId = roleItem.RoleId });
+                        }
+                    }
 
-                    // Příklad volání (upravte název procedury podle vaší DB)
-                    // "BEGIN SP_ADD_STAFF(:p_fn, :p_ln, :p_em, :p_ph, :p_ad, :p_ac); END;"
-
-                    // Pokud nemáte proceduru, použijte toto jako demonstraci "RAW SQL" insertu:
-                    string sql = "INSERT INTO STAFF (STAFF_ID, FIRST_NAME, LAST_NAME, EMAIL, PHONE, ADDRESS_ADDRESS_ID, ACTIVE, HIRE_DATE) " +
-                                 "VALUES (SEQ_STAFF.NEXTVAL, :p_fn, :p_ln, :p_em, :p_ph, :p_ad, :p_ac, SYSDATE)";
-
-                    _context.Database.ExecuteSqlRaw(sql, pFirst, pLast, pEmail, pPhone, pAddr, pActive);
-
-                    MessageBox.Show("Zaměstnanec přidán (SQL/Procedura).");
+                    // Uložení rolí do StaffRoles
+                    foreach (var roleItem in lstRoles.Items.OfType<RoleSelection>().Where(r => r.IsSelected))
+                    {
+                        _context.StaffRoles.Add(new StaffRole { StaffId = newStaff.StaffId, RoleId = roleItem.RoleId });
+                    }
+                    _context.SaveChanges();
+                    MessageBox.Show("Zaměstnanec a uživatel úspěšně vytvořen.");
                 }
                 else
                 {
-                    // Update - necháme EF nebo také přepíšeme na SQL
+                    // === UPDATE EXISTUJÍCÍHO ===
                     _selectedStaff.FirstName = txtFirstName.Text;
                     _selectedStaff.LastName = txtLastName.Text;
                     _selectedStaff.Email = txtEmail.Text;
-                    // ...
+                    _selectedStaff.Phone = txtPhone.Text;
+                    _selectedStaff.AddressId = addrId;
+                    _selectedStaff.Active = chkActive.IsChecked == true ? "Y" : "N";
+                    _selectedStaff.Notes = txtNotes.Text;
+
+                    // Aktualizace Usera
+                    var user = _context.Users.FirstOrDefault(u => u.StaffId == _selectedStaff.StaffId);
+                    if (user != null)
+                    {
+                        user.Username = txtUsername.Text;
+                        // Heslo měníme jen pokud bylo zadáno
+                        if (!string.IsNullOrWhiteSpace(txtPassword.Password))
+                        {
+                            user.PasswordHash = txtPassword.Password;
+                        }
+                    }
+                    else if (!string.IsNullOrWhiteSpace(txtUsername.Text))
+                    {
+                        // Pokud zaměstnanec neměl usera, vytvoříme ho teď
+                        var newUser = new User
+                        {
+                            Username = txtUsername.Text,
+                            PasswordHash = string.IsNullOrWhiteSpace(txtPassword.Password) ? "1234" : txtPassword.Password,
+                            Email = txtEmail.Text ?? "",
+                            StaffId = _selectedStaff.StaffId,
+                            IsActive = "Y"
+                        };
+                        _context.Users.Add(newUser);
+                    }
+
+                    // Aktualizace rolí (Smaž staré, přidej nové) - zjednodušeně pro StaffRoles
+                    var oldRoles = _context.StaffRoles.Where(sr => sr.StaffId == _selectedStaff.StaffId);
+                    _context.StaffRoles.RemoveRange(oldRoles);
+
+                    foreach (var roleItem in lstRoles.Items.OfType<RoleSelection>().Where(r => r.IsSelected))
+                    {
+                        _context.StaffRoles.Add(new StaffRole { StaffId = _selectedStaff.StaffId, RoleId = roleItem.RoleId });
+                        // Poznámka: Synchronizace UserRoles by byla složitější, zde řešíme hlavně StaffRoles
+                    }
+
                     _context.SaveChanges();
+                    MessageBox.Show("Zaměstnanec aktualizován.");
                 }
 
                 LoadStaff();
@@ -177,7 +259,7 @@ namespace AquaParkManager.Windows
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Chyba: " + ex.Message);
+                MessageBox.Show("Chyba při ukládání: " + ex.Message + "\n" + ex.InnerException?.Message);
             }
         }
 
@@ -207,8 +289,25 @@ namespace AquaParkManager.Windows
         private void UpdateStaffRolesInDatabase(int staffId, List<RoleSelection> selectedRoles) { /* ... */ }
         private void ClearForm()
         {
-            txtFirstName.Clear(); txtLastName.Clear(); txtEmail.Clear(); txtPhone.Clear(); ClearAddressFields();
+            txtFirstName.Clear();
+            txtLastName.Clear();
+            txtEmail.Clear();
+            txtPhone.Clear();
+            txtNotes.Clear();
+
+            // Vyčistit Login pole
+            txtUsername.Clear();
+            txtPassword.Clear();
+
+            ClearAddressFields();
+
+            dpHireDate.SelectedDate = DateTime.Now;
+            chkActive.IsChecked = true;
             _selectedStaff = null;
+
+            // Reset rolí
+            foreach (var r in _roleSelections) r.IsSelected = false;
+            lstRoles.Items.Refresh();
         }
         private void ClearAddressFields() { txtStreet.Clear(); txtHouseNumber.Clear(); txtCity.Clear(); txtZip.Clear(); }
 

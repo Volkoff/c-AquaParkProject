@@ -78,13 +78,13 @@
                     <StackPanel Margin="10">
                         <TextBlock Text="First Name:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtFirstName" Margin="0,0,0,10"/>
-                        
+
                         <TextBlock Text="Last Name:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtLastName" Margin="0,0,0,10"/>
-                        
+
                         <TextBlock Text="Email:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtEmail" Margin="0,0,0,10"/>
-                        
+
                         <TextBlock Text="Phone:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtPhone" Margin="0,0,0,10"/>
 
@@ -92,7 +92,6 @@
                             <StackPanel>
                                 <TextBlock Text="Ulice:" FontWeight="Bold"/>
                                 <TextBox x:Name="txtStreet" Margin="0,0,0,5"/>
-
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -107,26 +106,31 @@
                                         <TextBox x:Name="txtZip" Margin="0,0,0,5"/>
                                     </StackPanel>
                                 </Grid>
-
                                 <TextBlock Text="Město:" FontWeight="Bold"/>
                                 <TextBox x:Name="txtCity" Margin="0,0,0,5"/>
-
                                 <TextBlock Text="Region (Kraj):" FontWeight="Bold"/>
                                 <TextBox x:Name="txtRegion" Text="Pardubický kraj" Margin="0,0,0,5"/>
-
                                 <TextBlock Text="Země:" FontWeight="Bold"/>
                                 <TextBox x:Name="txtCountry" Text="Česká republika" Margin="0,0,0,5"/>
                             </StackPanel>
                         </GroupBox>
+
+                        <Border BorderBrush="LightGray" BorderThickness="1" Padding="5" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="PŘIHLAŠOVACÍ ÚDAJE" Foreground="Blue" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <TextBlock Text="Uživatelské jméno (Login):" FontWeight="Bold"/>
+                                <TextBox x:Name="txtUsername" Margin="0,0,0,5"/>
+                                <TextBlock Text="Heslo:" FontWeight="Bold"/>
+                                <PasswordBox x:Name="txtPassword" Margin="0,0,0,5"/>
+                            </StackPanel>
+                        </Border>
 
                         <TextBlock Text="Assigned Roles:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <Border BorderBrush="#FFABADB3" BorderThickness="1" CornerRadius="2" Margin="0,0,0,10">
                             <ListBox x:Name="lstRoles" Height="100" ScrollViewer.VerticalScrollBarVisibility="Auto" BorderThickness="0">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <CheckBox Content="{Binding RoleName}" 
-                          IsChecked="{Binding IsSelected}" 
-                          Margin="2"/>
+                                        <CheckBox Content="{Binding RoleName}" IsChecked="{Binding IsSelected}" Margin="2"/>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
@@ -134,34 +138,19 @@
 
                         <TextBlock Text="Hire Date:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <DatePicker x:Name="dpHireDate" Margin="0,0,0,10"/>
-                        
+
                         <CheckBox x:Name="chkActive" Content="Active" Margin="0,0,0,10"/>
-                        
+
                         <TextBlock Text="Notes:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtNotes" 
-                                Height="80" 
-                                TextWrapping="Wrap" 
-                                AcceptsReturn="True" 
-                                VerticalScrollBarVisibility="Auto"
-                                Margin="0,0,0,15"/>
-                        
-                        <!-- Action Buttons -->
-                           <Button x:Name="btnSave" 
-                               Content="💾 Save" 
-                               Style="{StaticResource PrimaryActionButtonStyle}" 
-                               Margin="0,0,0,5"
-                               Click="BtnSave_Click"/>
-                        
-                           <Button x:Name="btnDelete" 
-                               Content="🗑️ Delete" 
-                               Style="{StaticResource DangerButtonStyle}"
-                               Margin="0,0,0,5"
-                               Click="BtnDelete_Click"/>
-                        
-                           <Button x:Name="btnClear" 
-                               Content="🔄 Clear" 
-                               Style="{StaticResource NeutralButtonStyle}"
-                               Click="BtnClear_Click"/>
+                        <TextBox x:Name="txtNotes" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button x:Name="btnSave" Content="💾 Save" Width="90" Height="30" Margin="0,0,5,0" Style="{StaticResource PrimaryActionButtonStyle}" Click="BtnSave_Click"/>
+                            <Button x:Name="btnDelete" Content="🗑️ Delete" Width="90" Height="30" Margin="0,0,5,0" Style="{StaticResource DangerButtonStyle}" Click="BtnDelete_Click"/>
+                            <Button x:Name="btnClear" Content="🔄 Clear" Width="90" Height="30" Style="{StaticResource NeutralButtonStyle}" Click="BtnClear_Click"/>
+                        </StackPanel>
+
+                        <Border Height="20"/>
                     </StackPanel>
                 </ScrollViewer>
             </GroupBox>

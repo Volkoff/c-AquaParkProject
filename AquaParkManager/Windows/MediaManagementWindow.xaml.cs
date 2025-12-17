@@ -48,14 +48,21 @@ namespace AquaParkManager.Windows
                     byte[] fileBytes = File.ReadAllBytes(dlg.FileName);
                     string fileName = Path.GetFileName(dlg.FileName);
 
+                    var firstAttraction = _context.Attractions.FirstOrDefault();
+                    if (firstAttraction == null)
+                    {
+                        MessageBox.Show("Nelze nahrát: V databázi není žádná atrakce (ATTRACTIONS), ke které bych obrázek přiřadil.");
+                        return;
+                    }
+
                     var newMedia = new Media
                     {
                         FileName = fileName,
-                        MimeType = "image/jpeg", // Zjednodušeně
-                        MediaData = fileBytes,   // ZDE SE UKLÁDÁ BLOB
+                        MimeType = "image/jpeg",
+                        MediaData = fileBytes,
                         RelatedTable = "ATTRACTIONS",
-                        RelatedId = 1 // Příklad: vážeme k atrakci ID 1
-                    };
+                        RelatedId = firstAttraction.AttractionId // Použijeme existující ID
+                    }; ;
 
                     _context.Media.Add(newMedia);
                     _context.SaveChanges();

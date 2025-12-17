@@ -16,18 +16,19 @@ namespace AquaParkManager.Windows
         {
             InitializeComponent();
 
-            // Bod 21: Kontrola práv - Historii/Logy vidí jen Admin
+
             if (!IsUserAdmin())
             {
                 MessageBox.Show("Přístup k provozním logům (Historie) má pouze Administrátor.", "Přístup zamítnut");
                 this.Close();
-                return; // Ukončíme konstruktor, okno se zavře
+                return; 
             }
 
             _context = new AquaParkContext();
             LoadMaintenanceRecords();
-            // ... (ostatní load metody: LoadStaff, LoadAttractions) ...
             ClearForm();
+            LoadAttractions();
+            LoadStaff();
         }
 
         private bool IsUserAdmin()
@@ -43,7 +44,6 @@ namespace AquaParkManager.Windows
                 bool isAdmin = roles.Contains("ADMIN") || roles.Contains("MANAGER");
                 bool isStaff = isAdmin || roles.Contains("STAFF");
                 
-                // If no roles found, check if user is linked to a Staff record
                 if (roles.Count == 0 && App.CurrentUser.StaffId.HasValue)
                 {
                     isStaff = true;
@@ -58,7 +58,6 @@ namespace AquaParkManager.Windows
         {
             try
             {
-                // OPERATIONAL_LOGS
                 var records = _context.MaintenanceRecords
                     .Include(m => m.Staff)
                     .OrderByDescending(m => m.ReportDate)
@@ -69,11 +68,29 @@ namespace AquaParkManager.Windows
             catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
 
-        // ... (Zbytek metod BtnSave, BtnDelete atd. zůstává stejný) ...
-        // Jen pro úplnost, zde jsou prázdné placeholdery, zkopírujte si obsah z původního souboru:
-        private void LoadAttractions() { /*...*/ }
-        private void LoadStaff() { /*...*/ }
-        private void DgMaintenance_SelectionChanged(object sender, SelectionChangedEventArgs e) { /*...*/ }
+        private void LoadAttractions()
+        {
+            cmbAttraction.ItemsSource = _context.Attractions.ToList();
+            cmbAttraction.DisplayMemberPath = "Name";       // Co se zobrazí
+            cmbAttraction.SelectedValuePath = "AttractionId"; // Co je hodnota
+        }
+        private void LoadStaff()
+        {
+            cmbStaff.ItemsSource = _context.Staff.Where(s => s.Active == "Y").ToList();
+            cmbStaff.DisplayMemberPath = "FullName";
+            cmbStaff.SelectedValuePath = "StaffId";
+        }
+        private void DgMaintenance_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _selectedMaintenance = dgMaintenance.SelectedItem as MaintenanceRecord;
+            if (_selectedMaintenance != null)
+            {
+                cmbAttraction.SelectedValue = _selectedMaintenance.RelatedId;
+                cmbStaff.SelectedValue = _selectedMaintenance.ReportedBy;
+                dpReportDate.SelectedDate = _selectedMaintenance.ReportDate;
+                txtProblemDescription.Text = _selectedMaintenance.ProblemDescription;
+            }
+        }
         private void BtnAddMaintenance_Click(object sender, RoutedEventArgs e) { /*...*/ }
         private void BtnSave_Click(object sender, RoutedEventArgs e) { /*...*/ }
         private void BtnDelete_Click(object sender, RoutedEventArgs e) { /*...*/ }

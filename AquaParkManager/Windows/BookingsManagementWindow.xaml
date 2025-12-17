@@ -53,29 +53,7 @@
             <GroupBox Grid.Column="2" Header="Booking Details" FontWeight="Bold">
                 <ScrollViewer>
                     <StackPanel Margin="10">
-                        <TextBlock Text="Booking Reference:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtBookingRef" Margin="0,0,0,10"/>
 
-                        <TextBlock Text="Customer:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <ComboBox x:Name="cmbVisitor" Margin="0,0,0,10" DisplayMemberPath="FullName" SelectedValuePath="VisitorId"/>
-
-                        <TextBlock Text="Reservation Date:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <DatePicker x:Name="dpReservationDate" Margin="0,0,0,10"/>
-
-                        <TextBlock Text="Reservation Time:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtReservationTime" Margin="0,0,0,10"/>
-
-                        <TextBlock Text="Ticket Type:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <ComboBox x:Name="cmbTicketType" Margin="0,0,0,10" DisplayMemberPath="Name" SelectedValuePath="TicketTypeId"/>
-
-                        <TextBlock Text="Number of Tickets:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtTicketQuantity" Text="1" Margin="0,0,0,10"/>
-
-                        <TextBlock Text="Created Date:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <DatePicker x:Name="dpCreatedDate" Margin="0,0,0,10"/>
-
-                        <TextBlock Text="Total Amount (Auto-calc):" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtTotalAmount" IsReadOnly="True" Background="#F0F0F0" Margin="0,0,0,10"/>
 
                         <TextBlock Text="Status:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <ComboBox x:Name="cmbStatus" Margin="0,0,0,10">

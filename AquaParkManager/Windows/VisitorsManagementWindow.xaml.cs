@@ -92,6 +92,13 @@ namespace AquaParkManager.Windows
             {
                 ClearAddressFields();
             }
+
+            var membership = _context.Memberships
+        .FirstOrDefault(m => m.VisitorId == visitor.VisitorId && m.Status == "ACTIVE" && (m.EndDate == null || m.EndDate > DateTime.Now));
+
+            txtMembershipStatus.Text = membership != null
+                ? $"{membership.MembershipType} (Platí do: {membership.EndDate:dd.MM.yyyy})"
+                : "Žádné aktivní členství";
         }
 
         private void BtnAddVisitor_Click(object sender, RoutedEventArgs e)

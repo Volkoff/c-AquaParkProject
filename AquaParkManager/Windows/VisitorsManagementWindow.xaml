@@ -94,6 +94,8 @@
 
                         <TextBlock Text="Notes:" FontWeight="Bold" Margin="0,0,0,5"/>
                         <TextBox x:Name="txtNotes" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15"/>
+                        <TextBlock Text="Členství:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock x:Name="txtMembershipStatus" Text="-" Margin="0,0,0,15" Foreground="Blue"/>
 
                         <Button x:Name="btnSave" Content="💾 Save" Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,0,5" Click="BtnSave_Click"/>
                         <Button x:Name="btnDelete" Content="🗑️ Delete" Style="{StaticResource DangerButtonStyle}" Margin="0,0,0,5" Click="BtnDelete_Click"/>
