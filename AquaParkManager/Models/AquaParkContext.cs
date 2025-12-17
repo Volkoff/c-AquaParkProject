@@ -128,7 +128,6 @@ namespace AquaParkManager.Models
 
 public override int SaveChanges()
         {
-            // Ponech�no beze zm�ny (Audit log logic)
             var entries = ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
